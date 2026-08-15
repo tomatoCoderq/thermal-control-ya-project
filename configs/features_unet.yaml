@@ -1,0 +1,51 @@
+# Static features mode for U-Net / SegFormer
+mode: features
+train: true
+seed: 0
+samples_per_video: 4
+cache_dir: artifacts/cache
+
+sources:
+  - root: archive/data
+    masks: archive/labels/manual_mask
+    pattern: "*.mat"
+
+features:
+  extractors: [tsr, pca]
+  pca_components: 3
+  frame_step: 8
+  poly_degree: 5
+  thermal_diff: true
+  cache_dir: artifacts/features
+
+crop:
+  size: [256, 256]
+  strategy: random
+  pad_mode: reflect
+
+mask:
+  kind: multiclass
+  num_classes: 6
+  missing: zeros
+
+norm:
+  mode: per_sample
+
+augs:
+  spatial:
+    - name: HorizontalFlip
+      params: {p: 0.5}
+    - name: VerticalFlip
+      params: {p: 0.5}
+    - name: Affine
+      params:
+        scale: [0.9, 1.1]
+        rotate: [-20, 20]
+        border_mode: 0
+        p: 0.7
+
+loader:
+  batch_size: 2
+  num_workers: 0
+  shuffle: true
+  collate: stack

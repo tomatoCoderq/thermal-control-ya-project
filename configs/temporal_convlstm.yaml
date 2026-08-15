@@ -1,0 +1,58 @@
+mode: temporal
+train: true
+seed: 0
+samples_per_video: 4
+cache_dir: artifacts/cache
+sources:
+- root: archive/data
+  masks: archive/labels/manual_mask
+  pattern: '*.mat'
+temporal:
+  sampler: window
+  num_frames: 16
+  stride: 2
+  window_size: 16
+  jitter: 1
+  frame_drop_p: 0.0
+  time_pad: repeat_last
+  add_dt_channel: false
+  frame_range:
+  - 0
+  - 400
+crop:
+  size:
+  - 256
+  - 256
+  strategy: random
+  pad_mode: reflect
+mask:
+  kind: multiclass
+  num_classes: 6
+  missing: zeros
+norm:
+  mode: per_sample
+augs:
+  spatial:
+  - name: HorizontalFlip
+    params:
+      p: 0.5
+  - name: VerticalFlip
+    params:
+      p: 0.5
+files_meta:
+  R_002:
+    heat_start: 5
+    peak_contrast: 11
+    frame_range:
+    - 0
+    - 400
+    rois:
+    - x: 40
+      y: 40
+      w: 120
+      h: 100
+loader:
+  batch_size: 2
+  num_workers: 0
+  shuffle: true
+  collate: stack
