@@ -1,0 +1,7 @@
+data/
+labels/
+*.mat
+__pycache__/
+*.pyc
+venv/
+.venv/
