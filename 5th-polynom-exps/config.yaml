@@ -1,0 +1,34 @@
+# Конфигурация эксперимента p5
+
+paths:
+  kaggle_dir: datasets/dataset_kaggle
+  tpu_dir: datasets/dataset_tpu
+  mask_type: automated_mask          # automated_mask | manual_mask
+  feature_dir: features_p5
+  log_dir: runs                      # корень для логов обучения (runs/<timestamp>_<tag>/)
+
+classes:
+  gray2cls: {0: 0, 51: 1, 102: 2, 153: 3, 204: 4, 255: 5}   # серый уровень → класс (0=фон)
+  cls_depth: {1: 0.5, 2: 1.0, 3: 1.5, 4: 2.0, 5: 2.5}       # класс → глубина, см
+  class_names: ["фон", "0.5", "1.0", "1.5", "2.0", "2.5"]
+
+tsr:
+  poly_degree: 5                     # p5: число каналов = poly_degree + 1 = 6
+
+crop:
+  crop: 48                           # размер кропа, пикс.
+  n_bg_per_video: 8                  # фоновых кропов на запись
+
+model:
+  name: small_cnn                    # small_cnn | resnet18
+  dropout: 0.3
+  pretrained: true
+
+train:
+  batch_size: 64
+  epochs: 400
+  learning_rate: 0.001
+  n_test_videos: 10                  # сплит по видео (без утечки)
+  max_videos: null                   # null = все записи; число — для отладки
+  loss_name: ce                      # ce | weighted_ce | label_smooth
+  seed: 67
