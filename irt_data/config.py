@@ -1,0 +1,240 @@
+"""Config-driven dataclasses for the IRT segmentation dataset."""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Literal
+
+import yaml
+
+Mode = Literal["features", "temporal"]
+CropStrategy = Literal["roi_random", "roi_center", "random", "center", "full"]
+PadMode = Literal["reflect", "zeros"]
+MaskKind = Literal["multiclass", "binary"]
+MissingMask = Literal["zeros", "none", "error"]
+NormMode = Literal["per_video", "per_sample", "none"]
+CollateMode = Literal["stack", "pad"]
+TimePad = Literal["repeat_last", "reflect"]
+SamplerName = Literal["uniform", "window", "keypoints"]
+
+
+@dataclass
+class ROI:
+    """Axis-aligned bounding box in pixel coordinates (x, y, w, h)."""
+
+    x: int
+    y: int
+    w: int
+    h: int
+
+    def as_xyxy(self) -> tuple[int, int, int, int]:
+        return self.x, self.y, self.x + self.w, self.y + self.h
+
+
+@dataclass
+class FileMeta:
+    """Per-file metadata: ROI boxes and temporal keypoints.
+
+    frame_range: [start, end) — interesting frames for this video.
+    """
+
+    rois: list[ROI] = field(default_factory=list)
+    frame_range: tuple[int, int] | None = None
+    heat_start: int | None = None
+    cool_start: int | None = None
+    peak_contrast: int | None = None
+    fps: float | None = None
+    notes: str = ""
+
+
+@dataclass
+class SourceConfig:
+    """One folder of .mat videos + optional mask folder."""
+
+    root: str
+    masks: str | None = None
+    pattern: str = "*.mat"
+    time_axis: int | None = None  # None = auto-detect
+
+
+@dataclass
+class FeatureConfig:
+    extractors: list[str] = field(default_factory=lambda: ["tsr"])
+    frame_step: int = 4
+    max_frames: int | None = None
+    poly_degree: int = 5
+    pca_components: int = 3
+    thermal_diff: bool = True
+    cache_dir: str = "artifacts/features"
+
+
+@dataclass
+class TemporalConfig:
+    sampler: SamplerName = "uniform"
+    num_frames: int = 20
+    stride: int = 1
+    window_size: int | None = None  # defaults to num_frames
+    jitter: int = 0
+    frame_drop_p: float = 0.0
+    time_pad: TimePad = "repeat_last"
+    add_dt_channel: bool = False
+    # Global default window [start, end); per-file files_meta.*.frame_range overrides.
+    frame_range: tuple[int, int] | None = None
+
+
+@dataclass
+class CropConfig:
+    size: tuple[int, int] = (256, 256)  # (H, W)
+    strategy: CropStrategy = "random"
+    pad_mode: PadMode = "reflect"
+    roi_padding: int = 0
+
+
+@dataclass
+class AugSpec:
+    name: str
+    params: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class AugConfig:
+    spatial: list[AugSpec] = field(default_factory=list)
+    use_replay_fallback: bool = False
+
+
+@dataclass
+class NormConfig:
+    mode: NormMode = "per_video"
+    eps: float = 1e-6
+
+
+@dataclass
+class MaskConfig:
+    kind: MaskKind = "multiclass"
+    num_classes: int = 6
+    missing: MissingMask = "zeros"
+    ignore_index: int = 255
+    pixel_to_class: dict[int, int] = field(
+        default_factory=lambda: {0: 0, 51: 1, 102: 2, 153: 3, 204: 4, 255: 5}
+    )
+
+
+@dataclass
+class LoaderConfig:
+    batch_size: int = 4
+    num_workers: int = 0
+    shuffle: bool = True
+    pin_memory: bool = False
+    drop_last: bool = False
+    collate: CollateMode = "stack"
+
+
+@dataclass
+class DatasetConfig:
+    """Top-level dataset configuration."""
+
+    mode: Mode = "features"
+    sources: list[SourceConfig] = field(default_factory=list)
+    cache_dir: str = "artifacts/cache"
+    files_meta: dict[str, FileMeta] = field(default_factory=dict)
+    features: FeatureConfig = field(default_factory=FeatureConfig)
+    temporal: TemporalConfig = field(default_factory=TemporalConfig)
+    crop: CropConfig = field(default_factory=CropConfig)
+    augs: AugConfig = field(default_factory=AugConfig)
+    norm: NormConfig = field(default_factory=NormConfig)
+    mask: MaskConfig = field(default_factory=MaskConfig)
+    loader: LoaderConfig = field(default_factory=LoaderConfig)
+    samples_per_video: int = 1
+    seed: int = 0
+    train: bool = True
+
+    @staticmethod
+    def from_dict(data: dict[str, Any]) -> DatasetConfig:
+        data = dict(data)
+        sources = [SourceConfig(**s) for s in data.pop("sources", [])]
+        files_meta_raw = data.pop("files_meta", {}) or {}
+        files_meta: dict[str, FileMeta] = {}
+        for vid, meta in files_meta_raw.items():
+            meta = dict(meta)
+            rois = [ROI(**r) for r in meta.pop("rois", [])]
+            # migrate renamed keys → frame_range
+            if "frame_range" not in meta and (
+                "interesting_start" in meta or "interesting_end" in meta
+            ):
+                meta["frame_range"] = (
+                    meta.pop("interesting_start", 0),
+                    meta.pop("interesting_end", None),
+                )
+            meta.pop("interesting_start", None)
+            meta.pop("interesting_end", None)
+            meta.pop("start", None)
+            meta.pop("end", None)
+            fr = meta.pop("frame_range", None)
+            if fr is not None:
+                meta["frame_range"] = tuple(fr)
+            files_meta[vid] = FileMeta(rois=rois, **meta)
+
+        features = FeatureConfig(**data.pop("features", {}) or {})
+        temporal_raw = data.pop("temporal", {}) or {}
+        temporal_raw = {k: v for k, v in temporal_raw.items() if not str(k).startswith("_")}
+        # migrate old interesting_* → frame_range
+        if "frame_range" not in temporal_raw and (
+            "interesting_start" in temporal_raw or "interesting_end" in temporal_raw
+        ):
+            temporal_raw["frame_range"] = (
+                temporal_raw.pop("interesting_start", 0),
+                temporal_raw.pop("interesting_end", None),
+            )
+        temporal_raw.pop("interesting_start", None)
+        temporal_raw.pop("interesting_end", None)
+        if "frame_range" in temporal_raw and temporal_raw["frame_range"] is not None:
+            fr = temporal_raw["frame_range"]
+            temporal_raw["frame_range"] = tuple(fr) if not isinstance(fr, tuple) else fr
+        temporal = TemporalConfig(**temporal_raw)
+
+        crop_raw = data.pop("crop", {}) or {}
+        if "size" in crop_raw:
+            crop_raw["size"] = tuple(crop_raw["size"])
+        crop = CropConfig(**crop_raw)
+
+        augs_raw = data.pop("augs", {}) or {}
+        spatial = [AugSpec(**a) for a in augs_raw.pop("spatial", [])]
+        augs = AugConfig(spatial=spatial, **augs_raw)
+
+        norm = NormConfig(**data.pop("norm", {}) or {})
+        mask_raw = data.pop("mask", {}) or {}
+        if "pixel_to_class" in mask_raw and mask_raw["pixel_to_class"] is not None:
+            mask_raw["pixel_to_class"] = {
+                int(k): int(v) for k, v in dict(mask_raw["pixel_to_class"]).items()
+            }
+        mask = MaskConfig(**mask_raw)
+        loader = LoaderConfig(**data.pop("loader", {}) or {})
+
+        return DatasetConfig(
+            sources=sources,
+            files_meta=files_meta,
+            features=features,
+            temporal=temporal,
+            crop=crop,
+            augs=augs,
+            norm=norm,
+            mask=mask,
+            loader=loader,
+            **data,
+        )
+
+    @classmethod
+    def from_yaml(cls, path: str | Path) -> DatasetConfig:
+        with open(path, encoding="utf-8") as f:
+            raw = yaml.safe_load(f) or {}
+        return cls.from_dict(raw)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    def to_yaml(self, path: str | Path) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(self.to_dict(), f, sort_keys=False, allow_unicode=True)
