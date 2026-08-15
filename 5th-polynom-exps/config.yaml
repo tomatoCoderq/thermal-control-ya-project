@@ -20,15 +20,15 @@ crop:
   n_bg_per_video: 8                  # фоновых кропов на запись
 
 model:
-  name: small_cnn                    # small_cnn | resnet18
+  name: convnext_nano                    # small_cnn | resnet18
   dropout: 0.3
-  pretrained: true
+  pretrained: false
 
 train:
   batch_size: 64
-  epochs: 400
+  epochs: 50
   learning_rate: 0.001
   n_test_videos: 10                  # сплит по видео (без утечки)
   max_videos: null                   # null = все записи; число — для отладки
-  loss_name: ce                      # ce | weighted_ce | label_smooth
+  loss_name: label_smooth                      # ce | weighted_ce | label_smooth
   seed: 67
