@@ -7,7 +7,7 @@ from __future__ import annotations
 import torch
 from torch.optim import Optimizer
 
-from config import CFG
+from .config import CFG
 
 
 def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int = 5) -> torch.Tensor:
