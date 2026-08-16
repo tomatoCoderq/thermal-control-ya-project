@@ -15,5 +15,5 @@ datasets/dataset_kaggle/labels/automated_mask/*.mat
 datasets/dataset_tpu/*.mp4
 datasets/dataset_tpu/*.mat
 runs/
-
+*.mp4
 
