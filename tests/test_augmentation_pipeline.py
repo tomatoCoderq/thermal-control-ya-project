@@ -94,7 +94,7 @@ class _FakeBackend:
         return {"mean": float(self.video.mean()), "std": float(self.video.std())}
 
 
-def test_dataset_produces_unet_and_segformer_ready_square_tensor(tmp_path):
+def test_rectangular_crop_is_resized_then_grid_shuffled_as_square(tmp_path):
     cfg = DatasetConfig.from_dict(
         {
             "mode": "features",
@@ -110,10 +110,16 @@ def test_dataset_produces_unet_and_segformer_ready_square_tensor(tmp_path):
             },
             "object_crop": {
                 "enabled": True,
-                "roi": {"x": 6, "y": 2, "w": 20, "h": 20},
-                "output_size": [32, 32],
+                "roi": {"x": 6, "y": 2, "w": 17, "h": 11},
+                "square_pad": False,
+                "output_size": [256, 256],
             },
-            "crop": {"size": [32, 32], "strategy": "full"},
+            "crop": {"size": [256, 256], "strategy": "full"},
+            "augs": {
+                "spatial": [
+                    {"name": "RandomGridShuffle", "params": {"grid": [2, 2], "p": 1.0}}
+                ]
+            },
             "mask": {"kind": "binary", "num_classes": 2, "missing": "error"},
             "norm": {"mode": "per_channel"},
         }
@@ -123,6 +129,6 @@ def test_dataset_produces_unet_and_segformer_ready_square_tensor(tmp_path):
     mask[8:14, 12:18] = 255
     dataset.mask_reader.read = lambda _: mask
     sample = dataset[0]
-    assert tuple(sample["image"].shape) == (3, 32, 32)
-    assert tuple(sample["mask"].shape) == (32, 32)
+    assert tuple(sample["image"].shape) == (3, 256, 256)
+    assert tuple(sample["mask"].shape) == (256, 256)
     assert set(sample["mask"].unique().tolist()) == {0, 1}
