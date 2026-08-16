@@ -69,14 +69,14 @@ class CropConfig(BaseModel):
 
 
 class ModelConfig(BaseModel):
-    name: str = "small_cnn"
+    name: str = "convnext_nano"
     dropout: float = Field(0.3, ge=0.0, le=1.0)
     pretrained: bool = False
 
 
 class TrainConfig(BaseModel):
     batch_size: PositiveInt = 64
-    epochs: PositiveInt = 30
+    epochs: PositiveInt = 50
     learning_rate: PositiveFloat = 1e-3
     n_test_videos: PositiveInt = 10
     max_videos: Optional[int] = None
@@ -108,7 +108,6 @@ def load_config(path: str | Path = DEFAULT_YAML) -> Config:
 
 
 CFG = load_config()
-
 
 
 

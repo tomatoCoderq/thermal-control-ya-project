@@ -27,19 +27,18 @@ crop:
   n_bg_per_video: 8
 
 model:
-  name: small_cnn                    # small_cnn or a timm model name
+  name: convnext_nano                # same model as polynom-classification
   dropout: 0.3
   pretrained: false
 
 train:
   batch_size: 64
-  epochs: 30
+  epochs: 50
   learning_rate: 0.001
   n_test_videos: 10
   max_videos: null
   loss_name: label_smooth            # ce | weighted_ce | label_smooth
   seed: 67
-
 
 
 
