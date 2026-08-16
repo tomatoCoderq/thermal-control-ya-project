@@ -1,0 +1,16 @@
+# Model-only config. Input preparation and augmentation live in the parent branch.
+dataset_config: augmentation_ppt.yaml
+
+training:
+  model_name: nvidia/mit-b0
+  pretrained: true
+  epochs: 30
+  learning_rate: 0.00006
+  weight_decay: 0.01
+  dice_weight: 0.5
+  val_fraction: 0.15
+  test_fraction: 0.15
+  split_seed: 42
+  amp: true
+  precompute_features: true
+  output_dir: artifacts/segformer
