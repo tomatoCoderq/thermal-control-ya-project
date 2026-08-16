@@ -11,8 +11,8 @@ import torch
 from torch.utils.data import Dataset
 
 from irt_data.cache import video_id_from_path
-from irt_data.config import DatasetConfig, FileMeta
-from irt_data.crops import RoiCropper
+from irt_data.config import AugConfig, DatasetConfig, FileMeta, ROI
+from irt_data.crops import CropBox, ObjectCropper, RoiCropper
 from irt_data.features import CachedFeatureExtractor, build_feature_extractor
 from irt_data.formatter import TensorFormatter
 from irt_data.io_backend import MaskReader, MatIOBackend, NpyMemmapBackend, discover_mat_files
@@ -44,6 +44,7 @@ class IRTDataset(Dataset):
         self.mask_reader: MaskReader
         self.backend: NpyMemmapBackend | MatIOBackend
         self._mat_stems: dict[str, str] = {}
+        self._source_object_rois: dict[str, ROI | None] = {}
 
         cache_dir = Path(cfg.cache_dir)
         index_path = cache_dir / "index.json"
@@ -58,6 +59,7 @@ class IRTDataset(Dataset):
                 mat_map[vid] = path
                 self._mat_stems[vid] = path.stem
                 mask_dirs[vid] = Path(src.masks) if src.masks else None
+                self._source_object_rois[vid] = src.object_roi
 
         if backend is not None:
             self.backend = backend
@@ -112,8 +114,10 @@ class IRTDataset(Dataset):
             self.mask_reader.register_alias(vid, stem.replace(" ", "_"))
 
         self.files_meta: dict[str, FileMeta] = dict(cfg.files_meta)
+        self.object_cropper = ObjectCropper(cfg.object_crop)
         self.cropper = RoiCropper(cfg.crop)
-        self.transforms = TransformPipeline.from_config(cfg.augs)
+        # Validation/test must be deterministic even when the shared config lists augs.
+        self.transforms = TransformPipeline.from_config(cfg.augs if cfg.train else AugConfig())
         self.formatter = TensorFormatter(cfg.norm, cfg.mask)
 
         self.feature_extractor = None
@@ -192,14 +196,30 @@ class IRTDataset(Dataset):
         T, H, W = self.backend.shape(video_id)
         stats = self.backend.stats(video_id)
         mask, has_mask = self._load_mask(video_id, H, W)
-        box = self.cropper.plan(H, W, rng, meta)
+        source_roi = self._source_object_rois.get(video_id)
+        object_box = self.object_cropper.box_for(H, W, meta, source_roi)
 
         frame_indices: list[int] = []
 
         if self.cfg.mode == "features":
             assert self.cached_features is not None
             video = self.backend.read_all(video_id)
-            feats = self.cached_features(video, video_id=video_id)  # (H,W,C)
+            video = self.object_cropper.apply_frames(video, object_box)
+            mask = self.object_cropper.apply_mask(mask, object_box)
+            roi_key = "_".join(str(x) for x in object_box.as_tuple)
+            cool_start = meta.cool_start if meta is not None else None
+            temporal_key = "auto" if cool_start is None else f"cool_{cool_start}"
+            feats = self.cached_features(
+                video,
+                video_id=f"{video_id}__object_{roi_key}__{temporal_key}",
+                cooling_start=cool_start,
+            )  # (H,W,C)
+            feature_box = CropBox(
+                0, 0, feats.shape[0], feats.shape[1], feats.shape[0], feats.shape[1]
+            )
+            feats = self.object_cropper.apply_image(feats, feature_box)
+            H2, W2 = feats.shape[:2]
+            box = self.cropper.plan(H2, W2, rng, meta)
             feats = self.cropper.apply_image(feats, box)
             mask_c = self.cropper.apply_mask(mask, box)
             feats, mask_c = self.transforms.apply_features(feats, mask_c)
@@ -211,6 +231,19 @@ class IRTDataset(Dataset):
             idx = self.frame_sampler(T, rng, meta)
             frame_indices = idx.tolist()
             frames = self.backend.read_frames(video_id, idx)  # (T,H,W)
+            frames = self.object_cropper.apply_frames(frames, object_box)
+            mask = self.object_cropper.apply_mask(mask, object_box)
+            frames = np.stack(
+                [
+                    self.object_cropper.apply_image(
+                        f, CropBox(0, 0, f.shape[0], f.shape[1], f.shape[0], f.shape[1])
+                    )
+                    for f in frames
+                ],
+                axis=0,
+            )
+            H2, W2 = frames.shape[1:]
+            box = self.cropper.plan(H2, W2, rng, meta)
             frames = self.cropper.apply_frames(frames, box)
             mask_c = self.cropper.apply_mask(mask, box)
             frames, mask_c = self.transforms.apply_temporal(frames, mask_c)
@@ -230,5 +263,6 @@ class IRTDataset(Dataset):
             if frame_indices
             else torch.zeros(0, dtype=torch.long),
             "crop": torch.tensor(box.as_tuple, dtype=torch.long),
+            "object_crop": torch.tensor(object_box.as_tuple, dtype=torch.long),
             "has_mask": torch.tensor(has_mask, dtype=torch.bool),
         }

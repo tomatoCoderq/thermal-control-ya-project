@@ -29,6 +29,21 @@ def build_albumentations(specs: list[AugSpec]) -> A.Compose | None:
         return None
     transforms = []
     for spec in specs:
+        if spec.name == "DiscreteRotate7":
+            params = {"border_mode": 4, "fill": 0, "fill_mask": 0}
+            params.update(_coerce_params(spec.params))
+            p = float(params.pop("p", 1.0))
+            transforms.append(
+                A.OneOf(
+                    [
+                        A.Rotate(limit=(-7, -7), p=0.25, **params),
+                        A.NoOp(p=0.50),
+                        A.Rotate(limit=(7, 7), p=0.25, **params),
+                    ],
+                    p=p,
+                )
+            )
+            continue
         if not hasattr(A, spec.name):
             raise AttributeError(
                 f"albumentations has no transform '{spec.name}'. "

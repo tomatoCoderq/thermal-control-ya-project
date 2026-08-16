@@ -1,0 +1,74 @@
+# Universal U-Net/SegFormer input: one video -> three PPT phase maps -> binary mask.
+dataset:
+  mode: features
+  train: true
+  seed: 42
+  samples_per_video: 4
+  cache_dir: artifacts/cache
+
+  sources:
+    - root: archive/data
+      masks: archive/labels/manual_mask
+      pattern: "*.mat"
+      # Kaggle fixture, estimated from the supplied 256x320 frame.
+      object_roi: {x: 80, y: 25, w: 178, h: 190}
+    # Local videos have a different fixture; enable after masks are available:
+    # - root: data
+    #   masks: labels/local_masks
+    #   pattern: "*.mat"
+    #   object_roi: {x: 80, y: 43, w: 178, h: 120}
+
+  features:
+    extractors: [ppt]
+    ppt_bins: [1, 2, 3]
+    ppt_frames: 512
+    ppt_auto_cooling: true
+    frame_step: 1
+    thermal_diff: false
+    cache_dir: artifacts/ppt_features
+
+  # Fallback only. A source-level or per-video ROI has higher priority.
+  object_crop:
+    enabled: true
+    roi: null
+    square_pad: false
+    pad_mode: reflect
+    output_size: [256, 256]
+
+  # object_crop already returns the final model size.
+  crop:
+    size: [256, 256]
+    strategy: full
+    pad_mode: reflect
+
+  mask:
+    kind: binary
+    num_classes: 2
+    missing: error
+
+  norm:
+    mode: per_channel
+
+  augs:
+    spatial:
+      - name: HorizontalFlip
+        params: {p: 0.5}
+      - name: VerticalFlip
+        params: {p: 0.5}
+      - name: DiscreteRotate7
+        params: {p: 1.0}
+      # Optional ablation. Set p: 0.0 for the recommended main run.
+      - name: RandomGridShuffle
+        params: {grid: [2, 2], p: 0.15}
+
+  loader:
+    batch_size: 4
+    num_workers: 2
+    shuffle: true
+    pin_memory: true
+    collate: stack
+
+  # Example of a per-video crop override:
+  files_meta:
+    # R_002:
+    #   object_roi: {x: 80, y: 28, w: 178, h: 178}

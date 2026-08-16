@@ -1,4 +1,4 @@
-"""Feature extractors: collapse temporal axis into channel maps (TSR / PCA)."""
+"""Feature extractors: collapse temporal axis into spatial channel maps."""
 
 from __future__ import annotations
 
@@ -180,6 +180,77 @@ class PCAFeatureExtractor:
         return scores.reshape(H, W, self.n_components).astype(np.float32)
 
 
+def detect_cooling_start(video: np.ndarray) -> int:
+    """Estimate the first cooling frame from the smoothed spatial median curve."""
+    signal = np.median(video.astype(np.float32), axis=(1, 2))
+    if signal.size < 5:
+        return 0
+    window = min(11, signal.size if signal.size % 2 else signal.size - 1)
+    kernel = np.ones(window, dtype=np.float32) / window
+    smooth = np.convolve(signal, kernel, mode="same")
+    # Ignore convolution edge artefacts. Cooling begins around the thermal peak.
+    margin = window // 2
+    return int(np.argmax(smooth[margin:-margin]) + margin)
+
+
+def _resample_time(video: np.ndarray, n_frames: int) -> np.ndarray:
+    """Linearly resample only the temporal axis of a (T,H,W) video."""
+    if n_frames <= 0 or video.shape[0] == n_frames:
+        return video.astype(np.float32, copy=False)
+    old_t = np.linspace(0.0, 1.0, video.shape[0], dtype=np.float32)
+    new_t = np.linspace(0.0, 1.0, n_frames, dtype=np.float32)
+    right = np.searchsorted(old_t, new_t, side="left").clip(1, video.shape[0] - 1)
+    left = right - 1
+    alpha = ((new_t - old_t[left]) / (old_t[right] - old_t[left]))[:, None, None]
+    return ((1.0 - alpha) * video[left] + alpha * video[right]).astype(np.float32)
+
+
+class PPTFeatureExtractor:
+    """Pulsed Phase Thermography: phase maps of selected non-zero FFT bins."""
+
+    name = "ppt"
+
+    def __init__(
+        self,
+        bins: tuple[int, ...] = (1, 2, 3),
+        n_frames: int = 512,
+        auto_cooling: bool = True,
+        frame_step: int = 1,
+    ) -> None:
+        if not bins or min(bins) < 1:
+            raise ValueError("PPT bins must be non-zero positive integers")
+        self.bins = tuple(int(x) for x in bins)
+        self.n_frames = int(n_frames)
+        self.auto_cooling = bool(auto_cooling)
+        self.frame_step = max(1, int(frame_step))
+
+    def num_channels(self) -> int:
+        return len(self.bins)
+
+    def __call__(
+        self, video: np.ndarray, cooling_start: int | None = None
+    ) -> np.ndarray:
+        v = video.astype(np.float32, copy=False)
+        if cooling_start is not None:
+            start = min(max(0, int(cooling_start)), v.shape[0] - 4)
+            v = v[start:]
+        elif self.auto_cooling:
+            v = v[detect_cooling_start(v) :]
+        if v.shape[0] < 4:
+            raise ValueError("PPT requires at least four cooling frames")
+        v = v[:: self.frame_step]
+        v = _resample_time(v, self.n_frames)
+        # Remove the temporal mean. This affects only DC and improves numerical stability.
+        v = v - v.mean(axis=0, keepdims=True)
+        spectrum = np.fft.rfft(v, axis=0)
+        if max(self.bins) >= spectrum.shape[0]:
+            raise ValueError(
+                f"PPT bin {max(self.bins)} unavailable for {v.shape[0]} frames"
+            )
+        phase = np.angle(spectrum[np.asarray(self.bins)]).transpose(1, 2, 0)
+        return phase.astype(np.float32)
+
+
 class CompositeFeatureExtractor:
     """Concatenate several extractors along channel axis."""
 
@@ -199,6 +270,7 @@ class CompositeFeatureExtractor:
 
 
 FEATURE_REGISTRY: dict[str, type] = {
+    "ppt": PPTFeatureExtractor,
     "tsr": TSRFeatureExtractor,
     "pca": PCAFeatureExtractor,
 }
@@ -212,7 +284,16 @@ def build_feature_extractor(cfg: FeatureConfig) -> FeatureExtractor:
                 f"Unknown feature extractor '{name}'. Available: {list(FEATURE_REGISTRY)}"
             )
         cls = FEATURE_REGISTRY[name]
-        if name == "tsr":
+        if name == "ppt":
+            extractors.append(
+                cls(
+                    bins=cfg.ppt_bins,
+                    n_frames=cfg.ppt_frames,
+                    auto_cooling=cfg.ppt_auto_cooling,
+                    frame_step=cfg.frame_step,
+                )
+            )
+        elif name == "tsr":
             extractors.append(
                 cls(
                     frame_step=cfg.frame_step,
@@ -245,6 +326,9 @@ def _cfg_hash(cfg: FeatureConfig) -> str:
             "max_frames": cfg.max_frames,
             "poly_degree": cfg.poly_degree,
             "pca_components": cfg.pca_components,
+            "ppt_bins": cfg.ppt_bins,
+            "ppt_frames": cfg.ppt_frames,
+            "ppt_auto_cooling": cfg.ppt_auto_cooling,
             "thermal_diff": cfg.thermal_diff,
         },
         sort_keys=True,
@@ -274,13 +358,23 @@ class CachedFeatureExtractor:
     def path_for(self, video_id: str) -> Path:
         return self.cache_dir / f"{video_id}__{self._hash}.npy"
 
-    def __call__(self, video: np.ndarray, video_id: str | None = None) -> np.ndarray:
+    def __call__(
+        self,
+        video: np.ndarray,
+        video_id: str | None = None,
+        cooling_start: int | None = None,
+    ) -> np.ndarray:
         if video_id is not None:
             path = self.path_for(video_id)
             if path.exists():
                 return np.load(path)
-            feats = self.base(video)
+            if isinstance(self.base, PPTFeatureExtractor):
+                feats = self.base(video, cooling_start=cooling_start)
+            else:
+                feats = self.base(video)
             np.save(path, feats.astype(np.float32))
             logger.info("cached features %s", path.name)
             return feats
+        if isinstance(self.base, PPTFeatureExtractor):
+            return self.base(video, cooling_start=cooling_start)
         return self.base(video)

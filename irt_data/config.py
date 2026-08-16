@@ -13,7 +13,7 @@ CropStrategy = Literal["roi_random", "roi_center", "random", "center", "full"]
 PadMode = Literal["reflect", "zeros"]
 MaskKind = Literal["multiclass", "binary"]
 MissingMask = Literal["zeros", "none", "error"]
-NormMode = Literal["per_video", "per_sample", "none"]
+NormMode = Literal["per_video", "per_sample", "per_channel", "none"]
 CollateMode = Literal["stack", "pad"]
 TimePad = Literal["repeat_last", "reflect"]
 SamplerName = Literal["uniform", "window", "keypoints"]
@@ -40,6 +40,7 @@ class FileMeta:
     """
 
     rois: list[ROI] = field(default_factory=list)
+    object_roi: ROI | None = None
     frame_range: tuple[int, int] | None = None
     heat_start: int | None = None
     cool_start: int | None = None
@@ -56,6 +57,7 @@ class SourceConfig:
     masks: str | None = None
     pattern: str = "*.mat"
     time_axis: int | None = None  # None = auto-detect
+    object_roi: ROI | None = None
 
 
 @dataclass
@@ -65,6 +67,9 @@ class FeatureConfig:
     max_frames: int | None = None
     poly_degree: int = 5
     pca_components: int = 3
+    ppt_bins: tuple[int, ...] = (1, 2, 3)
+    ppt_frames: int = 512
+    ppt_auto_cooling: bool = True
     thermal_diff: bool = True
     cache_dir: str = "artifacts/features"
 
@@ -89,6 +94,22 @@ class CropConfig:
     strategy: CropStrategy = "random"
     pad_mode: PadMode = "reflect"
     roi_padding: int = 0
+
+
+@dataclass
+class ObjectCropConfig:
+    """Fixed specimen crop applied before temporal feature extraction.
+
+    ``roi`` is a global fallback. ``files_meta.<id>.object_roi`` overrides it.
+    The rectangle is cropped first and optionally reflection-padded to a square.
+    Feature maps and masks are resized to ``output_size`` afterwards.
+    """
+
+    enabled: bool = False
+    roi: ROI | None = None
+    square_pad: bool = True
+    pad_mode: PadMode = "reflect"
+    output_size: tuple[int, int] = (256, 256)
 
 
 @dataclass
@@ -140,6 +161,7 @@ class DatasetConfig:
     files_meta: dict[str, FileMeta] = field(default_factory=dict)
     features: FeatureConfig = field(default_factory=FeatureConfig)
     temporal: TemporalConfig = field(default_factory=TemporalConfig)
+    object_crop: ObjectCropConfig = field(default_factory=ObjectCropConfig)
     crop: CropConfig = field(default_factory=CropConfig)
     augs: AugConfig = field(default_factory=AugConfig)
     norm: NormConfig = field(default_factory=NormConfig)
@@ -152,12 +174,23 @@ class DatasetConfig:
     @staticmethod
     def from_dict(data: dict[str, Any]) -> DatasetConfig:
         data = dict(data)
-        sources = [SourceConfig(**s) for s in data.pop("sources", [])]
+        sources = []
+        for source_raw in data.pop("sources", []):
+            source_raw = dict(source_raw)
+            source_roi_raw = source_raw.pop("object_roi", None)
+            sources.append(
+                SourceConfig(
+                    object_roi=ROI(**source_roi_raw) if source_roi_raw is not None else None,
+                    **source_raw,
+                )
+            )
         files_meta_raw = data.pop("files_meta", {}) or {}
         files_meta: dict[str, FileMeta] = {}
         for vid, meta in files_meta_raw.items():
             meta = dict(meta)
             rois = [ROI(**r) for r in meta.pop("rois", [])]
+            object_roi_raw = meta.pop("object_roi", None)
+            object_roi = ROI(**object_roi_raw) if object_roi_raw is not None else None
             # migrate renamed keys → frame_range
             if "frame_range" not in meta and (
                 "interesting_start" in meta or "interesting_end" in meta
@@ -173,9 +206,12 @@ class DatasetConfig:
             fr = meta.pop("frame_range", None)
             if fr is not None:
                 meta["frame_range"] = tuple(fr)
-            files_meta[vid] = FileMeta(rois=rois, **meta)
+            files_meta[vid] = FileMeta(rois=rois, object_roi=object_roi, **meta)
 
-        features = FeatureConfig(**data.pop("features", {}) or {})
+        features_raw = data.pop("features", {}) or {}
+        if "ppt_bins" in features_raw:
+            features_raw["ppt_bins"] = tuple(features_raw["ppt_bins"])
+        features = FeatureConfig(**features_raw)
         temporal_raw = data.pop("temporal", {}) or {}
         temporal_raw = {k: v for k, v in temporal_raw.items() if not str(k).startswith("_")}
         # migrate old interesting_* → frame_range
@@ -192,6 +228,15 @@ class DatasetConfig:
             fr = temporal_raw["frame_range"]
             temporal_raw["frame_range"] = tuple(fr) if not isinstance(fr, tuple) else fr
         temporal = TemporalConfig(**temporal_raw)
+
+        object_crop_raw = data.pop("object_crop", {}) or {}
+        object_roi_raw = object_crop_raw.pop("roi", None)
+        if "output_size" in object_crop_raw:
+            object_crop_raw["output_size"] = tuple(object_crop_raw["output_size"])
+        object_crop = ObjectCropConfig(
+            roi=ROI(**object_roi_raw) if object_roi_raw is not None else None,
+            **object_crop_raw,
+        )
 
         crop_raw = data.pop("crop", {}) or {}
         if "size" in crop_raw:
@@ -216,6 +261,7 @@ class DatasetConfig:
             files_meta=files_meta,
             features=features,
             temporal=temporal,
+            object_crop=object_crop,
             crop=crop,
             augs=augs,
             norm=norm,

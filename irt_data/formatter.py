@@ -26,6 +26,12 @@ class TensorFormatter:
         eps = self.norm.eps
         if mode == "none":
             return x
+        if mode == "per_channel":
+            # Feature images are HWC; temporal clips are THW and use a global fallback.
+            if x.ndim == 3 and x.shape[-1] <= 32:
+                mean = x.mean(axis=(0, 1), keepdims=True)
+                std = x.std(axis=(0, 1), keepdims=True)
+                return (x - mean) / np.maximum(std, eps)
         if mode == "per_video" and stats and "mean" in stats and "std" in stats:
             mean = float(stats["mean"])
             std = float(stats["std"])

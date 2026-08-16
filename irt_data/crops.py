@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from irt_data.config import CropConfig, FileMeta, PadMode, ROI
+from irt_data.config import CropConfig, FileMeta, ObjectCropConfig, PadMode, ROI
 
 
 @dataclass(frozen=True)
@@ -77,6 +77,85 @@ def apply_crop_thw(
     """Apply the same crop to every frame in (T, H, W)."""
     out = [apply_crop_2d(frames[t], box, pad_mode) for t in range(frames.shape[0])]
     return np.stack(out, axis=0)
+
+
+def resize_2d(
+    image: np.ndarray, size: tuple[int, int], is_mask: bool = False
+) -> np.ndarray:
+    """Resize HxW or HxWxC; masks always use nearest-neighbour interpolation."""
+    import cv2
+
+    out_h, out_w = size
+    interpolation = cv2.INTER_NEAREST if is_mask else cv2.INTER_LINEAR
+    resized = cv2.resize(image, (out_w, out_h), interpolation=interpolation)
+    if image.ndim == 3 and resized.ndim == 2:
+        resized = resized[..., None]
+    return resized.astype(image.dtype, copy=False)
+
+
+class ObjectCropper:
+    """Remove the fixture/frame while preserving one coordinate system per video."""
+
+    def __init__(self, cfg: ObjectCropConfig) -> None:
+        self.cfg = cfg
+
+    def roi_for(self, meta: FileMeta | None, source_roi: ROI | None = None) -> ROI | None:
+        if meta is not None and meta.object_roi is not None:
+            return meta.object_roi
+        if source_roi is not None:
+            return source_roi
+        return self.cfg.roi
+
+    def box_for(
+        self, H: int, W: int, meta: FileMeta | None, source_roi: ROI | None = None
+    ) -> CropBox:
+        roi = self.roi_for(meta, source_roi)
+        if not self.cfg.enabled or roi is None:
+            return CropBox(0, 0, H, W, H, W)
+
+        x0 = max(0, int(roi.x))
+        y0 = max(0, int(roi.y))
+        x1 = min(W, int(roi.x + roi.w))
+        y1 = min(H, int(roi.y + roi.h))
+        if x1 <= x0 or y1 <= y0:
+            raise ValueError(f"object_roi {roi} is outside image shape {(H, W)}")
+
+        h, w = y1 - y0, x1 - x0
+        return CropBox(y0, x0, y1, x1, h, w)
+
+    def _pad_square(self, image: np.ndarray, is_mask: bool) -> np.ndarray:
+        if not self.cfg.square_pad or image.shape[0] == image.shape[1]:
+            return image
+        h, w = image.shape[:2]
+        side = max(h, w)
+        top = (side - h) // 2
+        bottom = side - h - top
+        left = (side - w) // 2
+        right = side - w - left
+        pad_width = ((top, bottom), (left, right))
+        if image.ndim == 3:
+            pad_width += ((0, 0),)
+        if is_mask:
+            return np.pad(image, pad_width, mode="constant", constant_values=0)
+        return np.pad(image, pad_width, mode=_pad_mode_numpy(self.cfg.pad_mode))
+
+    def apply_frames(self, frames: np.ndarray, box: CropBox) -> np.ndarray:
+        cropped = apply_crop_thw(frames, box, self.cfg.pad_mode)
+        return np.stack([self._pad_square(frame, is_mask=False) for frame in cropped])
+
+    def apply_image(self, image: np.ndarray, box: CropBox) -> np.ndarray:
+        cropped = apply_crop_2d(image, box, self.cfg.pad_mode)
+        cropped = self._pad_square(cropped, is_mask=False)
+        if not self.cfg.enabled:
+            return cropped
+        return resize_2d(cropped, self.cfg.output_size, is_mask=False)
+
+    def apply_mask(self, mask: np.ndarray, box: CropBox) -> np.ndarray:
+        cropped = apply_crop_2d(mask, box, pad_mode="zeros")
+        cropped = self._pad_square(cropped, is_mask=True)
+        if not self.cfg.enabled:
+            return cropped
+        return resize_2d(cropped, self.cfg.output_size, is_mask=True)
 
 
 class RoiCropper:
