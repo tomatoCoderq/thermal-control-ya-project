@@ -21,3 +21,9 @@ fourier_runs/
 *.tar
 *.log
 
+datasets/dataset_defects/
+datasets/dataset_for_segmentation/
+datasets/datasets_list/**/data/
+datasets/datasets_list/**/masks/
+*.zip
+datasets/**/*png
