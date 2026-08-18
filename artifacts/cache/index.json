@@ -1,0 +1,847 @@
+{
+  "cache_dir": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache",
+  "dtype": "float16",
+  "layout": "THW",
+  "videos": {
+    "R_002": {
+      "video_id": "R_002",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_002.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_002.mat",
+      "skipped": true
+    },
+    "R_003": {
+      "video_id": "R_003",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_003.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_003.mat",
+      "skipped": true
+    },
+    "R_004": {
+      "video_id": "R_004",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_004.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_004.mat",
+      "skipped": true
+    },
+    "R_005": {
+      "video_id": "R_005",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_005.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_005.mat",
+      "skipped": true
+    },
+    "R_006": {
+      "video_id": "R_006",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_006.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_006.mat",
+      "skipped": true
+    },
+    "R_007": {
+      "video_id": "R_007",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_007.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_007.mat",
+      "skipped": true
+    },
+    "R_008": {
+      "video_id": "R_008",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_008.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_008.mat",
+      "skipped": true
+    },
+    "R_009": {
+      "video_id": "R_009",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_009.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_009.mat",
+      "skipped": true
+    },
+    "R_010": {
+      "video_id": "R_010",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_010.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_010.mat",
+      "skipped": true
+    },
+    "R_011": {
+      "video_id": "R_011",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_011.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_011.mat",
+      "skipped": true
+    },
+    "R_012": {
+      "video_id": "R_012",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_012.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_012.mat",
+      "skipped": true
+    },
+    "R_013": {
+      "video_id": "R_013",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_013.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_013.mat",
+      "skipped": true
+    },
+    "R_014": {
+      "video_id": "R_014",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_014.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_014.mat",
+      "skipped": true
+    },
+    "R_015": {
+      "video_id": "R_015",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_015.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_015.mat",
+      "skipped": true
+    },
+    "R_016": {
+      "video_id": "R_016",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_016.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_016.mat",
+      "skipped": true
+    },
+    "R_017": {
+      "video_id": "R_017",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_017.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_017.mat",
+      "skipped": true
+    },
+    "R_018": {
+      "video_id": "R_018",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_018.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_018.mat",
+      "skipped": true
+    },
+    "R_019": {
+      "video_id": "R_019",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_019.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_019.mat",
+      "skipped": true
+    },
+    "R_020": {
+      "video_id": "R_020",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/R_020.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/R_020.mat",
+      "skipped": true
+    },
+    "Z_002": {
+      "video_id": "Z_002",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_002.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_002.mat",
+      "skipped": true
+    },
+    "Z_003": {
+      "video_id": "Z_003",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_003.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_003.mat",
+      "skipped": true
+    },
+    "Z_004": {
+      "video_id": "Z_004",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_004.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_004.mat",
+      "skipped": true
+    },
+    "Z_005": {
+      "video_id": "Z_005",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_005.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_005.mat",
+      "skipped": true
+    },
+    "Z_007": {
+      "video_id": "Z_007",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_007.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_007.mat",
+      "skipped": true
+    },
+    "Z_009": {
+      "video_id": "Z_009",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_009.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_009.mat",
+      "skipped": true
+    },
+    "Z_011": {
+      "video_id": "Z_011",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_011.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_011.mat",
+      "skipped": true
+    },
+    "Z_013": {
+      "video_id": "Z_013",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_013.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_013.mat",
+      "skipped": true
+    },
+    "Z_014": {
+      "video_id": "Z_014",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_014.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_014.mat",
+      "skipped": true
+    },
+    "Z_015": {
+      "video_id": "Z_015",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_015.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_015.mat",
+      "skipped": true
+    },
+    "Z_016": {
+      "video_id": "Z_016",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_016.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_016.mat",
+      "skipped": true
+    },
+    "Z_017": {
+      "video_id": "Z_017",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_017.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_017.mat",
+      "skipped": true
+    },
+    "Z_018": {
+      "video_id": "Z_018",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_018.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_018.mat",
+      "skipped": true
+    },
+    "Z_019": {
+      "video_id": "Z_019",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_019.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_019.mat",
+      "skipped": true
+    },
+    "Z_020": {
+      "video_id": "Z_020",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_020.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_020.mat",
+      "skipped": true
+    },
+    "sample10": {
+      "video_id": "sample10",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample10.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample10.mat",
+      "skipped": true
+    },
+    "sample11": {
+      "video_id": "sample11",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample11.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample11.mat",
+      "skipped": true
+    },
+    "sample12": {
+      "video_id": "sample12",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample12.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample12.mat",
+      "skipped": true
+    },
+    "sample13": {
+      "video_id": "sample13",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample13.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample13.mat",
+      "skipped": true
+    },
+    "sample14": {
+      "video_id": "sample14",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample14.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample14.mat",
+      "skipped": true
+    },
+    "sample15": {
+      "video_id": "sample15",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample15.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample15.mat",
+      "skipped": true
+    },
+    "sample16": {
+      "video_id": "sample16",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample16.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample16.mat",
+      "skipped": true
+    },
+    "sample17": {
+      "video_id": "sample17",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample17.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample17.mat",
+      "skipped": true
+    },
+    "sample18": {
+      "video_id": "sample18",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample18.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample18.mat",
+      "skipped": true
+    },
+    "sample19": {
+      "video_id": "sample19",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample19.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample19.mat",
+      "skipped": true
+    },
+    "sample20": {
+      "video_id": "sample20",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample20.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample20.mat",
+      "skipped": true
+    },
+    "sample21": {
+      "video_id": "sample21",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample21.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample21.mat",
+      "skipped": true
+    },
+    "sample3": {
+      "video_id": "sample3",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample3.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample3.mat",
+      "skipped": true
+    },
+    "sample4": {
+      "video_id": "sample4",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample4.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample4.mat",
+      "skipped": true
+    },
+    "sample5": {
+      "video_id": "sample5",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample5.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample5.mat",
+      "skipped": true
+    },
+    "sample6": {
+      "video_id": "sample6",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample6.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample6.mat",
+      "skipped": true
+    },
+    "sample7": {
+      "video_id": "sample7",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample7.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample7.mat",
+      "skipped": true
+    },
+    "sample8": {
+      "video_id": "sample8",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/sample8.npy",
+      "shape": [
+        2000,
+        240,
+        320
+      ],
+      "T": 2000,
+      "H": 240,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/sample8.mat",
+      "skipped": true
+    },
+    "Z_006": {
+      "video_id": "Z_006",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_006.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_006.mat",
+      "skipped": true
+    },
+    "Z_008": {
+      "video_id": "Z_008",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_008.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_008.mat",
+      "skipped": true
+    },
+    "Z_010": {
+      "video_id": "Z_010",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_010.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_010.mat",
+      "skipped": true
+    },
+    "Z_012": {
+      "video_id": "Z_012",
+      "npy": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/artifacts/cache/Z_012.npy",
+      "shape": [
+        1810,
+        256,
+        320
+      ],
+      "T": 1810,
+      "H": 256,
+      "W": 320,
+      "dtype": "float16",
+      "source": "/Users/user/Education/CVYandexCamp/thermal-control-ya-project/data/Z_012.mat",
+      "skipped": true
+    }
+  }
+}
