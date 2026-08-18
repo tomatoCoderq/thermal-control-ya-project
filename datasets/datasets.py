@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from typing import Optional
-from config import DatasetConfig
+from .config import DatasetConfig
 from PIL import Image
 
 from dataclasses import astuple
