@@ -65,7 +65,7 @@ class TermoDataset(Dataset):
             ).squeeze(0)
 
         mask = F.interpolate(
-            mask.unsqueeze(0).unsqueeze(0), size=self.standard_size, mode="nearest", align_corners=False
+            mask.unsqueeze(0).unsqueeze(0), size=self.standard_size, mode="nearest"
             ).squeeze(0).squeeze(0)
 
         mean = data.mean()
