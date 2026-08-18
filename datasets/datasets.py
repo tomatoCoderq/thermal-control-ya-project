@@ -12,8 +12,9 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset
 
 class TermoDataset(Dataset):
-    def __init__(self, root_dir: str, include: Optional[list[str]] = None, transform: Optional[callable] = None) -> None:
+    def __init__(self, root_dir: str, include: Optional[list[str]] = None, transform: Optional[callable] = None, standard_size: tuple[int, int] = (256, 256)) -> None:
         self.transform = transform
+        self.standard_size = standard_size
         self.items: list[tuple[str, str, DatasetConfig]] = []
 
         dataset_dirs = sorted(
@@ -60,11 +61,11 @@ class TermoDataset(Dataset):
             data = data.unsqueeze(0)
 
         data = F.interpolate(
-            data.unsqueeze(0), size=(256, 256), mode="bilinear", align_corners=False
+            data.unsqueeze(0), size=self.standard_size, mode="bilinear", align_corners=False
             ).squeeze(0)
 
         mask = F.interpolate(
-            mask.unsqueeze(0).unsqueeze(0), size=(256, 256), mode="bilinear", align_corners=False
+            mask.unsqueeze(0).unsqueeze(0), size=self.standard_size, mode="nearest", align_corners=False
             ).squeeze(0).squeeze(0)
 
         mean = data.mean()
