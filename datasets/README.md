@@ -101,7 +101,7 @@ crop:
 ## Пример использования
 
 ```python
-from termo_dataset import TermoDataset
+from datasets import TermoDataset
 
 ds = TermoDataset(
     root_dir="datasets_list",
