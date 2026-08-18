@@ -11,7 +11,7 @@
 ```
 datasets/          слой данных: TermoDataset, конфиг из manifest.yaml (см. datasets/README.md)
 scripts/           препроцессинг: маски глубины, экспорт в TIFF/видео
-experiments/       ноутбуки экспериментов
+experiments/       regression/ (регрессия глубины на TermoDataset) + notebooks/
 thermo_deprecated/ прежний унифицированный пайплайн (не развивается)
 runs/              логи и артефакты обучения (не в git)
 docs/              документация (см. docs/ARCHITECTURE.md)

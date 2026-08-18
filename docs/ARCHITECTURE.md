@@ -28,7 +28,9 @@ scripts/               препроцессинг
   thermal_to_tiff.py   экспорт кадра .mat в 32-битный float TIFF (реальные °C)
   thermal_to_video.py  .mat → colormap-видео (mp4/gif)
 
-experiments/notebooks/ эксперименты (ссылаются на off-main код / ветки)
+experiments/
+  regression/          пакет регрессии глубины поверх TermoDataset (см. ниже)
+  notebooks/           ноутбуки экспериментов (regression_experiments.ipynb — запускается на main)
 thermo_deprecated/     прежний пайплайн thermo (не используется)
 runs/                  логи и артефакты обучения (gitignored)
 docs/                  документация, статьи, отчёты
@@ -75,6 +77,30 @@ data:  { path: data,  file_pattern: ".mat", mat_key: "data", dtype: float32 }
 masks: { path: masks, file_pattern: ".png" }
 crop:  { x0: null, x1: null, y0: null, y1: null }   # все four заданы → кроп
 ```
+
+## Эксперимент: регрессия глубины (experiments/regression)
+
+Самодостаточный пакет на `main`: оценка глубины залегания дефекта (мм) чистой
+регрессией. Данные берёт через `TermoDataset`, дальше — прежний пайплайн:
+
+```
+main.py         TermoDataset → TSR-полином (6 каналов) → индекс дефектных кропов 48×48
+                (kaggle: gray→класс→мм; tpu: png-маска, depth = gray*6.1/255) →
+                сплит по видео → run(): loaders → модель → fit → метрики по доменам
+model.py        SmallCNN | timm (convnext_nano/resnet34), 1 выход
+losses.py       SmoothL1 (Huber) | L1 | MSE
+optimizers.py   Adam | AdamW | Muon (гибрид Muon+Adam)
+metrics.py      RegressionMetrics (mae_mm/rmse_mm/r2 + дискретизация в классы)
+engine/train.py train/eval, логи в runs/
+config.py       pydantic-конфиг (+ config.yaml)
+```
+
+Ноутбук `experiments/notebooks/regression_experiments.ipynb` вызывает
+`main.precompute_features()` (кэш TSR в `features_p5/`, `features_tpu/`) и гоняет
+эксперименты (перенос kaggle→tpu, смешанный трейн, k-fold, Adam vs Muon, сетка).
+
+`TermoDataset` унифицирует оба домена к 256×256; глобальная нормировка аффинна,
+поэтому наклоны TSR-полинома сохраняются (сдвигается лишь свободный член).
 
 ## Особенности и ограничения
 
