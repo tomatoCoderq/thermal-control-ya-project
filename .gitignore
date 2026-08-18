@@ -19,4 +19,7 @@ runs/
 fourier_features/
 fourier_runs/
 
-
+datasets/dataset_defects/
+datasets/dataset_for_segmentation/
+*.zip
+datasets/**/*png
