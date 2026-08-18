@@ -16,7 +16,13 @@ datasets/dataset_tpu/*.mp4
 datasets/dataset_tpu/*.mat
 runs/
 *.mp4
+fourier_features/
+fourier_runs/
 
 *.zip
 datasets/dataset_defects
 datasets/dataset_for_segmentation
+datasets/dataset_defects/
+datasets/dataset_for_segmentation/
+*.zip
+datasets/**/*png

@@ -12,7 +12,7 @@ from sklearn.metrics import (
 )
 
 try:
-    from config import CFG
+    from .config import CFG
     _DEF_N = CFG.classes.n_classes
     _DEF_NAMES = list(CFG.classes.class_names)
 except Exception:
