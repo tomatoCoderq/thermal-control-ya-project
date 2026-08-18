@@ -1,7 +1,7 @@
 import random
 import cv2
 import numpy as np
-from datasets import DepthRegressionDataset
+from datasets import TermoDataset
 
 ROOT_DIR = "datasets_list"
 
@@ -68,7 +68,7 @@ transform = Compose([
     RandomRotate90(p=0.5),
 ])
 
-ds = DepthRegressionDataset(root_dir=ROOT_DIR, include=["dataset_tpu"], transform=transform)
+ds = TermoDataset(root_dir=ROOT_DIR, include=["dataset_tpu"], transform=transform)
 print("Всего сэмплов:", len(ds))
 
 data, mask = ds[0]
