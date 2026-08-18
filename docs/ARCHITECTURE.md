@@ -21,7 +21,7 @@ datasets/              слой данных (главное на main)
     dataset_kaggle/    manifest.yaml + data/*.mat + masks/*.png
     dataset_tpu/       manifest.yaml + data/*.mat + masks/*.png
   dataset_defects/     сырьё CFRP/GFRP: последовательности кадров *.csv (gitignored)
-  dataset_for_segmentation/  CFRP-набор с аннотированными масками сегментации
+  dataset_for_models/  CFRP-набор с аннотированными масками сегментации
 
 scripts/               препроцессинг
   make_tpu_masks.py    генерация масок глубины для dataset_tpu из таблицы
@@ -83,7 +83,7 @@ crop:  { x0: null, x1: null, y0: null, y1: null }   # все four заданы �
   поведение с кропом и без него несогласовано.
 - Нормировка глобальная (одно mean/std на тензор), не поканальная.
 - Данные (`data/`, `labels/`, `*.mat`, `*.png`, `*.zip`, `dataset_defects/`,
-  `dataset_for_segmentation/`) и `runs/` — в `.gitignore`; в репозитории только код.
+  `dataset_for_models/`) и `runs/` — в `.gitignore`; в репозитории только код.
 
 ## Соответствие веткам
 

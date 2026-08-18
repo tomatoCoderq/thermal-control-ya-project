@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from datasets import TermoDataset
 
-ROOT_DIR = "datasets_list"
+ROOT_DIR = "datasets/datasets_list"
 
 
 class HorizontalFlip:

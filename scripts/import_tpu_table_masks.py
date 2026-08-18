@@ -3,7 +3,7 @@
 
 Reads ``Sample_*_Static`` / ``Calib_Sample_*`` from an external folder and writes:
 
-  labels/tpu_binary_masks/sample{n}.png     — 0/255 for segmentation (yaml)
+  labels/tpu_binary_masks/sample{n}.png     — 0/255 for models (yaml)
   labels/tpu_sample_masks/sample{n}.png/.npy  — depth gray + float mm map
   datasets/dataset_tpu/labels/table_mask/   — same names, 240×320 for thermo
 
@@ -57,7 +57,7 @@ def _resize_depth_npy(arr: np.ndarray) -> np.ndarray:
 
 
 def _stem_to_sample_name(stem: str) -> str | None:
-    """Sample_3_Static → sample3 ; Calib skipped for segmentation."""
+    """Sample_3_Static → sample3 ; Calib skipped for models."""
     m = re.match(r"Sample_(\d+)_Static", stem, re.I)
     if m:
         return f"sample{int(m.group(1))}"
@@ -186,7 +186,7 @@ def main() -> None:
         w.writerows([{"table_name": r["table_name"], "sample_name": r.get("sample_name", "")} for r in rows])
 
     print(f"\nГотово: {len(rows)} table_mask → {TABLE_DIR}")
-    print(f"        {len(seg_rows)} segmentation → {BINARY_DIR}")
+    print(f"        {len(seg_rows)} models → {BINARY_DIR}")
 
     from PIL import Image
 

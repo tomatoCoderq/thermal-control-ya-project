@@ -6,7 +6,7 @@ merges into one ``index.json`` (kaggle R_/Z_ + sample* with time_axis=2).
 
 Example (from repo root)::
 
-    python scripts/build_irt_cache.py --yaml segmentation/U-Net/dataset_tsr.yaml
+    python scripts/build_irt_cache.py --yaml models/U-Net/dataset_tsr.yaml
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ def main() -> None:
     ap.add_argument(
         "--yaml",
         type=Path,
-        default=ROOT / "segmentation" / "U-Net" / "dataset_tsr.yaml",
+        default=ROOT / "models" / "U-Net" / "dataset_tsr.yaml",
     )
     ap.add_argument(
         "--out",

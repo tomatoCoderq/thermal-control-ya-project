@@ -22,6 +22,35 @@ root_dir/
 должен содержать поля `data.path`, `data.file_pattern`, `data.mat_key`,
 `masks.path`, `masks.file_pattern`, `crop` (`x0`, `x1`, `y0`, `y1`).
 
+## Подготовка `datasets_list` в этом репозитории
+
+Данные в git не хранятся. Для `TermoDataset` разложите файлы так:
+
+```
+datasets/datasets_list/
+  dataset_kaggle/
+    manifest.yaml
+    data/          ← R_*.mat, Z_*.mat (из Kaggle или datasets/dataset_kaggle/data/)
+    masks/         ← R_002.png … (из labels/kaggle_binary_masks/ или automated_mask)
+  dataset_tpu/
+    manifest.yaml
+    data/          ← sample3.mat … (из data/ в корне)
+    masks/         ← sample3.png … (из labels/tpu_binary_masks/)
+```
+
+Имена масок должны совпадать со stem `.mat` (например `sample3.mat` → `sample3.png`).
+Пример симлинков из корня репозитория:
+
+```bash
+mkdir -p datasets/datasets_list/dataset_tpu/{data,masks}
+ln -sf ../../../data/sample*.mat datasets/datasets_list/dataset_tpu/data/
+ln -sf ../../../labels/tpu_binary_masks/sample*.png datasets/datasets_list/dataset_tpu/masks/
+```
+
+Модели сегментации в `models/` могут брать данные через `TermoDataset`
+(`backend=termo` в ConvLSTM / Thermal-Contrast) или через legacy `irt_data` + yaml
+(`backend=irt`, нужен `scripts/build_irt_cache.py`).
+
 ## Конструктор
 
 ```python
@@ -104,7 +133,7 @@ crop:
 from datasets import TermoDataset
 
 ds = TermoDataset(
-    root_dir="datasets_list",
+    root_dir="datasets/datasets_list",
     include=["dataset_tpu"],   # или None, чтобы взять все поддатасеты
     transform=my_augmentations,
 )
