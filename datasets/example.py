@@ -1,89 +1,91 @@
 import random
 import cv2
 import numpy as np
-from datasets import TermoDataset, TermoOversampledDataset, TermoFrameDataset
+from datasets import TermoDataset
+
+from transforms import HorizontalFlip, VerticalFlip, Transpose, RandomRotate90, Compose, RandomChoice
 
 ROOT_DIR = "datasets_list"
 
 
-class HorizontalFlip:
-    def __init__(self, p: float = 0.5):
-        self.p = p
+# class HorizontalFlip:
+#     def __init__(self, p: float = 0.5):
+#         self.p = p
 
-    def __call__(self, data, mask):
-        if random.random() < self.p:
-            data = np.flip(data, axis=1).copy()
-            mask = np.flip(mask, axis=1).copy()
-        return data, mask
-
-
-class VerticalFlip:
-    def __init__(self, p: float = 0.5):
-        self.p = p
-
-    def __call__(self, data, mask):
-        if random.random() < self.p:
-            data = np.flip(data, axis=0).copy()
-            mask = np.flip(mask, axis=0).copy()
-        return data, mask
+#     def __call__(self, data, mask):
+#         if random.random() < self.p:
+#             data = np.flip(data, axis=1).copy()
+#             mask = np.flip(mask, axis=1).copy()
+#         return data, mask
 
 
-class Transpose:
-    def __init__(self, p: float = 0.5):
-        self.p = p
+# class VerticalFlip:
+#     def __init__(self, p: float = 0.5):
+#         self.p = p
 
-    def __call__(self, data, mask):
-        if random.random() < self.p:
-            data = np.swapaxes(data, 0, 1).copy()
-            mask = np.swapaxes(mask, 0, 1).copy()
-        return data, mask
-
-
-class RandomRotate90:
-    def __init__(self, p: float = 0.5):
-        self.p = p
-
-    def __call__(self, data, mask):
-        if random.random() < self.p:
-            k = random.choice([1, 2, 3])   # 90 / 180 / 270
-            data = np.rot90(data, k, axes=(0, 1)).copy()
-            mask = np.rot90(mask, k, axes=(0, 1)).copy()
-        return data, mask
+#     def __call__(self, data, mask):
+#         if random.random() < self.p:
+#             data = np.flip(data, axis=0).copy()
+#             mask = np.flip(mask, axis=0).copy()
+#         return data, mask
 
 
-class Compose:
-    def __init__(self, transforms: list):
-        self.transforms = transforms
+# class Transpose:
+#     def __init__(self, p: float = 0.5):
+#         self.p = p
 
-    def __call__(self, data, mask):
-        for t in self.transforms:
-            data, mask = t(data, mask)
-        return data, mask
+#     def __call__(self, data, mask):
+#         if random.random() < self.p:
+#             data = np.swapaxes(data, 0, 1).copy()
+#             mask = np.swapaxes(mask, 0, 1).copy()
+#         return data, mask
 
-class RandomChoice:
-    def __init__(self, transforms: list, k: int = 2):
-        self.transforms = transforms
-        self.k = k
 
-    def __call__(self, data, mask):
-        chosen = random.sample(self.transforms, self.k)
-        for t in chosen:
-            data, mask = t(data, mask)
-        return data, mask
+# class RandomRotate90:
+#     def __init__(self, p: float = 0.5):
+#         self.p = p
+
+#     def __call__(self, data, mask):
+#         if random.random() < self.p:
+#             k = random.choice([1, 2, 3])   # 90 / 180 / 270
+#             data = np.rot90(data, k, axes=(0, 1)).copy()
+#             mask = np.rot90(mask, k, axes=(0, 1)).copy()
+#         return data, mask
+
+
+# class Compose:
+#     def __init__(self, transforms: list):
+#         self.transforms = transforms
+
+#     def __call__(self, data, mask):
+#         for t in self.transforms:
+#             data, mask = t(data, mask)
+#         return data, mask
+
+# class RandomChoice:
+#     def __init__(self, transforms: list, k: int = 2):
+#         self.transforms = transforms
+#         self.k = k
+
+#     def __call__(self, data, mask):
+#         chosen = random.sample(self.transforms, self.k)
+#         for t in chosen:
+#             data, mask = t(data, mask)
+#         return data, mask
 
 
 transform = RandomChoice([
-    HorizontalFlip(p=1.0),
-    VerticalFlip(p=1.0),
+    HorizontalFlip(p=0.1),
+    VerticalFlip(p=0.1),
     Transpose(p=1.0),
-    RandomRotate90(p=1.0),
-], k=3)
+    # RandomRotate90(p=1.0),
+], k=2)
 
 
-ds = TermoOversampledDataset(root_dir=ROOT_DIR, include=["dataset_tpu"], transform=transform, mag_coeff = 2)
+ds = TermoDataset(root_dir=ROOT_DIR, include=["dataset_kaggle"], transform=transform)
 print("Всего сэмплов:", len(ds))
 
-data, mask = ds[25]
+data, mask = ds[0]
 print("data:", data.shape, data.dtype)   # [2000, 256, 256]
 print("mask:", mask.shape, mask.dtype)
 print("mean/std:", data.mean().item(), data.std().item())
