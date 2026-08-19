@@ -1,8 +1,8 @@
-"""Turn `TermoDataset` videos into cached `(4, H, W)` U-Net inputs.
+"""Turn `TermoDataset` videos into cached `(NUM_CHANNELS, H, W)` U-Net inputs.
 
 Channel extraction is deterministic, so it runs once per video and the result is
 cached on disk. Reading a 2000-frame `.mat` and collapsing it costs about half a
-second; the cached `(4, 256, 256)` stack is 1 MB and loads instantly.
+second; the cached channel stack loads instantly on the next run.
 """
 from __future__ import annotations
 
