@@ -59,8 +59,9 @@ class ThermalControlVideoPredictor:
     def __init__(self,
                  seg_model: torch.nn.Module,
                  seg_transform: Compose,
-                 depth_model: torch.nn.Module | None = None,
-                 depth_transform: Compose | None = None,
+                 depth_model: torch.nn.Module,
+                 depth_extract: Compose,
+                 depth_norm: Compose,
                  device: torch.device = torch.device("cpu"),
                  threshold: float = 0.5,
                  crop: int = 48):
@@ -69,10 +70,9 @@ class ThermalControlVideoPredictor:
         self.threshold = threshold
         self.seg_transform = seg_transform
         self.seg = seg_model.eval().to(device)
-        self.depth_model = depth_model
-        self.depth_transform = depth_transform
-        if self.depth_model is not None:
-            self.depth_model.eval().to(device)
+        self.depth_model = depth_model.eval().to(device)
+        self.depth_extract = depth_extract      # видео (T,H,W) -> (C,H,W), TSR (глоб. peak)
+        self.depth_norm = depth_norm            # (C,s,s) -> (C',s,s), per-crop norm+deriv
 
     @torch.no_grad()
     def _segment(self, video: np.ndarray) -> dict:
@@ -100,9 +100,10 @@ class ThermalControlVideoPredictor:
     def _regress(self, video: np.ndarray, centers: list[tuple[int, int]]) -> list[float]:
         if not centers:
             return []
-        feats, _ = self.depth_transform(video) # (C,H,W)
+        feats, _ = self.depth_extract(video)                          # (C,H,W) TSR на полном кадре
         s = self.crop
-        crops = [feats[:, r0:r0 + s, c0:c0 + s] for r0, c0 in centers]
+        crops = [self.depth_norm(feats[:, r0:r0 + s, c0:c0 + s])[0]   # per-crop norm+deriv
+                 for r0, c0 in centers]
         x = torch.from_numpy(np.ascontiguousarray(np.stack(crops))).float()
         return self.depth_model(x.to(self.device)).reshape(-1).cpu().numpy().tolist()
 
@@ -128,7 +129,6 @@ class ThermalControlVideoPredictor:
 
 def predict_video(video: np.ndarray, predictor: ThermalControlVideoPredictor,
                   output_dir: str | Path | None = None) -> Prediction:
-    "func(video, output_dir): одно предсказание + опциональный дамп на диск"
     pred = predictor.predict(video)
     if output_dir is not None:
         pred.save(output_dir)

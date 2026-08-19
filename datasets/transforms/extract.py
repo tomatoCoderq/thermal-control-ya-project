@@ -28,6 +28,34 @@ class Std(_Reducer):
         return data.std(axis=0)[None], mask
 
 
+class PCA1(_Reducer):
+    """First temporal mode (power iteration), sign aligned with max-min."""
+
+    def __init__(self, iters: int = 8, eps: float = 1e-6):
+        self.iters = iters
+        self.eps = eps
+
+    def __call__(self, data, mask=None):
+        T, H, W = data.shape
+        x = data.reshape(T, -1).astype(np.float32)
+        x = x - x.mean(axis=0, keepdims=True)                # центрируем по времени
+
+        ref = (data.max(axis=0) - data.min(axis=0)).reshape(-1)   # max-min как сид
+        v = ref - ref.mean()
+        v = v / max(np.linalg.norm(v), self.eps)
+        for _ in range(self.iters):
+            u = x @ v
+            u = u / max(np.linalg.norm(u), self.eps)
+            v = x.T @ u
+            v = v / max(np.linalg.norm(v), self.eps)
+        score = (x.T @ (x @ v)).reshape(H, W)
+
+        centred = score.reshape(-1) - score.mean()
+        if np.dot(centred, ref - ref.mean()) < 0:            # знак: корреляция с max-min
+            score = -score
+        return score[None], mask
+
+
 class TSR(_Reducer):
     """Coefficients of log-time polynomial regression (TSR)"""
 
