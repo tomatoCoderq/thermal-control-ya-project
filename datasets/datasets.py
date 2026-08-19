@@ -68,10 +68,10 @@ class TermoDataset(Dataset):
             mask.unsqueeze(0).unsqueeze(0), size=self.standard_size, mode="nearest"
             ).squeeze(0).squeeze(0)
 
-        mean = data.mean()
-        std = data.std()
+        # mean = data.mean()
+        # std = data.std()
 
-        data = (data - mean) / (std + 1e-8)
+        # data = (data - mean) / (std + 1e-8)
 
         return data, mask
 

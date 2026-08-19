@@ -3,7 +3,7 @@ name: KaggleDataset
 data:
   path: data
   file_pattern: ".mat"
-  mat_key: "data"
+  mat_key: "imageArray"
   dtype: uint 
 
 masks:

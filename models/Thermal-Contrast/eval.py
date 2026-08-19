@@ -1,93 +1,78 @@
-"""Eval Thermal-Contrast U-Net on one sample."""
+"""Evaluate a trained checkpoint on the test split and show one sample."""
 from __future__ import annotations
 
-import random
-import sys
+import argparse
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parents[1]
-SEG = HERE.parent
-if str(HERE) not in sys.path:
-    sys.path.insert(0, str(HERE))
-for p in (SEG, ROOT):
-    sp = str(p)
-    if sp not in sys.path:
-        sys.path.append(sp)
+from paths import DATASETS_ROOT
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 
+from channels import CHANNEL_NAMES, CHANNEL_TITLES, DEFAULT_PARAMS, ChannelParams
 from common.device import get_device
-from common.metrics import SoftDiceLoss, dice_score, iou_score
-from common.mps_train import load_model_weights
-from data import ContrastCropDataset
-from features import PRESETS
-from irt_cfg import load_cfg
-from irt_data import IRTDataset
-from model import UNetModel
+from data import build_datasets
+from inference import evaluate_dataset, load_trained_model, predict_channels
+from train import CHECKPOINT_BEST, resolve_checkpoint
 
-PRESET = "combo"
-CKPT_BEST = HERE / f"model_contrast_{PRESET}_best.tar"
-CHANNEL_TITLES = {
-    "maxmin": "max−min",
-    "maxfirst": "max−t0",
-    "minfirst": "min−t0",
-    "lastfirst": "last−t0",
-    "std": "σ(t)",
-    "mean": "mean",
-    "pca1": "PCA₁(t)",
-}
+
+def show_sample(dataset, model, device, position: int) -> None:
+    channels, mask = dataset.channels_and_mask(dataset.indices[position])
+    out = predict_channels(model, channels, device)
+    truth = mask.squeeze().numpy()
+    video_id = dataset.video_ids[position]
+
+    fig, axes = plt.subplots(2, 4, figsize=(14, 7))
+    for column, name in enumerate(CHANNEL_NAMES):
+        axes[0, column].imshow(channels[column].numpy(), cmap="inferno", vmin=0, vmax=1)
+        axes[0, column].set_title(CHANNEL_TITLES[name])
+    axes[1, 0].imshow(truth, cmap="gray", vmin=0, vmax=1)
+    axes[1, 0].set_title("GT")
+    axes[1, 1].imshow(out["prob"], cmap="magma", vmin=0, vmax=1)
+    axes[1, 1].set_title("probability")
+    axes[1, 2].imshow(out["pred"], cmap="gray", vmin=0, vmax=1)
+    axes[1, 2].set_title("prediction")
+    axes[1, 3].imshow(channels[0].numpy(), cmap="inferno", vmin=0, vmax=1)
+    axes[1, 3].contour(truth, levels=[0.5], colors="lime", linewidths=1.2)
+    axes[1, 3].set_title("overlay")
+    for axis in axes.ravel():
+        axis.axis("off")
+    fig.suptitle(video_id)
+    fig.tight_layout()
+    plt.show()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Evaluate Thermal-Contrast U-Net")
+    parser.add_argument("--checkpoint", default=str(CHECKPOINT_BEST))
+    parser.add_argument("--root", type=Path, default=DATASETS_ROOT)
+    parser.add_argument("--include", nargs="*", default=None)
+    parser.add_argument("--test-every", type=int, default=4)
+    parser.add_argument("--num-frames", type=int, default=DEFAULT_PARAMS.num_frames)
+    parser.add_argument("--show", type=int, default=0, help="test index to plot; -1 to skip")
+    args = parser.parse_args()
+
+    params = ChannelParams(num_frames=args.num_frames)
+    _, test_ds = build_datasets(
+        root=args.root, include=args.include, params=params, test_every=args.test_every, augment=False
+    )
+    device = get_device()
+    model = load_trained_model(resolve_checkpoint(args.checkpoint), device)
+
+    rows = evaluate_dataset(model, test_ds, device)
+    print(f"\n{'video':12s} {'dice':>7s} {'iou':>7s} {'gt%':>7s} {'pred%':>7s}")
+    for row in rows:
+        print(
+            f"{row['video_id']:12s} {row['dice']:7.4f} {row['iou']:7.4f} "
+            f"{100 * row['gt_positive']:7.2f} {100 * row['pred_positive']:7.2f}"
+        )
+    mean_dice = sum(r["dice"] for r in rows) / len(rows)
+    mean_iou = sum(r["iou"] for r in rows) / len(rows)
+    print(f"\nmean over {len(rows)} test videos: dice={mean_dice:.4f} iou={mean_iou:.4f}")
+
+    if args.show >= 0:
+        show_sample(test_ds, model, device, args.show)
 
 
 if __name__ == "__main__":
-    cfg = load_cfg(HERE / "dataset_contrast.yaml", train=False)
-    ds = ContrastCropDataset(IRTDataset(cfg), preset=PRESET)
-    feat, mask = ds[random.randrange(len(ds))]
-    gt = mask[0].numpy()
-
-    model = UNetModel(in_channels=ds.num_channels, num_classes=1)
-    if CKPT_BEST.exists():
-        load_model_weights(model, CKPT_BEST)
-        print(f"loaded {CKPT_BEST.name}")
-    else:
-        print(f"WARNING: no {CKPT_BEST.name}")
-
-    device = get_device()
-    model.eval().to(device)
-    bce, dice_l = torch.nn.BCEWithLogitsLoss(), SoftDiceLoss()
-    y = mask.unsqueeze(0)
-    with torch.no_grad():
-        logits = model(feat.unsqueeze(0).to(device))
-        loss = (bce(logits, y.to(device)) + dice_l(logits, y.to(device))).item()
-        prob = torch.sigmoid(logits).squeeze().cpu().numpy()
-    pred = (prob > 0.5).astype(np.float32)
-    d, iou = dice_score(pred, gt), iou_score(pred, gt)
-    print(
-        f"preset={PRESET} ch={ds.channels} shape={tuple(feat.shape)} "
-        f"Dice={d:.4f} IoU={iou:.4f} loss={loss:.4f}"
-    )
-
-    n_ch = feat.shape[0]
-    fig, axes = plt.subplots(2, max(n_ch, 3), figsize=(3 * max(n_ch, 3), 6))
-    for c in range(n_ch):
-        name = ds.channels[c]
-        axes[0, c].imshow(feat[c].numpy(), cmap="inferno")
-        axes[0, c].set_title(CHANNEL_TITLES.get(name, name))
-        axes[0, c].axis("off")
-    for c in range(n_ch, axes.shape[1]):
-        axes[0, c].axis("off")
-
-    axes[1, 0].imshow(gt, cmap="gray", vmin=0, vmax=1)
-    axes[1, 0].set_title("GT")
-    axes[1, 1].imshow(prob, cmap="magma", vmin=0, vmax=1)
-    axes[1, 1].set_title("prob")
-    axes[1, 2].imshow(pred, cmap="gray", vmin=0, vmax=1)
-    axes[1, 2].set_title(f"pred Dice={d:.3f}")
-    for c in range(3, axes.shape[1]):
-        axes[1, c].axis("off")
-    for a in axes[1, :3]:
-        a.axis("off")
-    plt.tight_layout()
-    plt.show()
+    main()
