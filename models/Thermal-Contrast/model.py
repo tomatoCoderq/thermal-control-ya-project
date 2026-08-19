@@ -1,4 +1,4 @@
-"""Static U-Net on collapsed thermal contrast maps (reuses classic U-Net)."""
+"""U-Net architecture for Thermal-Contrast (loaded from models/U-Net/main.py)."""
 from __future__ import annotations
 
 import importlib.util
@@ -11,6 +11,5 @@ _mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_mod)
 
 UNetModel = _mod.UNetModel
-SoftDiceLoss = _mod.SoftDiceLoss
 
-__all__ = ["UNetModel", "SoftDiceLoss"]
+__all__ = ["UNetModel"]

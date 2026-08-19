@@ -12,7 +12,7 @@ import torch
 import torch.nn as nn
 
 from channels import CHANNEL_NAMES, DEFAULT_PARAMS, NUM_CHANNELS, ChannelParams
-from checkpoint import load_checkpoint, save_checkpoint
+from checkpoint import load_checkpoint, move_optimizer_state_to_device, save_checkpoint
 from common.device import get_device
 from common.loop import run_epoch
 from common.metrics import BCEDiceLoss
@@ -48,7 +48,6 @@ def train(
     lr: float = 3e-4,
     weight_decay: float = 1e-4,
     pos_weight: float = 10.0,
-    augment: bool = True,
     resume: str | Path | None = None,
     on_epoch_end: EpochCallback | None = None,
 ) -> tuple[HistoryTracker, nn.Module, float, int]:
@@ -60,7 +59,6 @@ def train(
         test_every=test_every,
         batch_size=batch_size,
         num_workers=num_workers,
-        augment=augment,
     )
 
     model = UNetModel(in_channels=NUM_CHANNELS, num_classes=1)
@@ -79,6 +77,7 @@ def train(
         print(f"resumed from epoch {state.epoch} (best IoU {best_iou:.4f} @ {best_epoch})")
 
     model = model.to(device)
+    move_optimizer_state_to_device(optimizer, device)
     tracker = HistoryTracker(RUNS_DIR, tag="contrast", resume=False)
     tracker.history = list(history)
 
@@ -159,7 +158,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--pos-weight", type=float, default=10.0)
     parser.add_argument("--num-frames", type=int, default=DEFAULT_PARAMS.num_frames)
-    parser.add_argument("--no-augment", action="store_true")
     parser.add_argument("--resume", default=None, help='"best", "last", or a path to a .pkl')
     return parser.parse_args()
 
@@ -178,6 +176,5 @@ if __name__ == "__main__":
         lr=args.lr,
         weight_decay=args.weight_decay,
         pos_weight=args.pos_weight,
-        augment=not args.no_augment,
         resume=args.resume,
     )

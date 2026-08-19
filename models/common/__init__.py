@@ -1,11 +1,6 @@
-"""Shared training utilities for models/U-Net, Attention U-Net, Mamba-UNet.
-
-Mirrors HeatControl/u-net: video-level train/test split, SegMetrics, history.json.
-"""
+"""Shared training utilities for Thermal-Contrast."""
 from __future__ import annotations
 
-# re-exports for convenience
-from .data import INPUT_SIZE, CropDataset, build_train_test_loaders
 from .device import get_device
 from .loop import run_epoch
 from .metrics import (
@@ -18,18 +13,12 @@ from .metrics import (
 )
 from .split import split_videos
 from .tracking import HistoryTracker
-from .variants import VARIANTS, apply_variant_features
 
 __all__ = [
-    "INPUT_SIZE",
-    "VARIANTS",
     "BCEDiceLoss",
-    "CropDataset",
     "HistoryTracker",
     "SegMetrics",
     "SoftDiceLoss",
-    "apply_variant_features",
-    "build_train_test_loaders",
     "combined_bce_dice",
     "dice_score",
     "get_device",

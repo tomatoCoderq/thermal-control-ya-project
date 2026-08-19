@@ -32,8 +32,6 @@ class SoftDiceLoss(nn.Module):
         m1 = probs.contiguous().reshape(probs.size(0), -1)
         m2 = targets.contiguous().reshape(targets.size(0), -1).to(probs.dtype)
         inter = (m1 * m2).sum(1)
-        # (2*inter + smooth) / (…), NOT 2*(inter + smooth) —
-        # empty pred+GT otherwise gives Dice=2 and loss=-1.
         score = (2.0 * inter + self.smooth) / (m1.sum(1) + m2.sum(1) + self.smooth)
         return 1.0 - score.mean()
 

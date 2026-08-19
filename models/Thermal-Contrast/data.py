@@ -2,13 +2,10 @@
 
 Channel extraction is deterministic, so it runs once per video and the result is
 cached on disk. Reading a 2000-frame `.mat` and collapsing it costs about half a
-second; the cached `(4, 256, 256)` stack is 1 MB and loads instantly. Augmentation
-is applied to the cached stack, which is why it is limited to the flips and
-rotations that commute with per-pixel channel extraction.
+second; the cached `(4, 256, 256)` stack is 1 MB and loads instantly.
 """
 from __future__ import annotations
 
-import random
 from pathlib import Path
 
 import numpy as np
@@ -42,13 +39,11 @@ class ContrastDataset(Dataset):
         indices: list[int],
         *,
         params: ChannelParams = DEFAULT_PARAMS,
-        augment: bool = False,
         cache_dir: Path | None = CACHE_DIR,
     ) -> None:
         self.source = source
         self.indices = list(indices)
         self.params = params
-        self.augment = augment
         self.cache_dir = Path(cache_dir) if cache_dir is not None else None
         if self.cache_dir is not None:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -71,7 +66,7 @@ class ContrastDataset(Dataset):
         return self.cache_dir / f"{source_name(mat_path)}__{video_id(mat_path)}__{self.params.key}.npy"
 
     def channels_and_mask(self, index: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Extracted channels and binary mask for a source index, without augmentation."""
+        """Extracted channels and binary mask for a source index."""
         cache_path = self._cache_path(index)
         if cache_path is not None and cache_path.is_file():
             stored = np.load(cache_path)
@@ -86,8 +81,6 @@ class ContrastDataset(Dataset):
 
     def __getitem__(self, position: int) -> tuple[torch.Tensor, torch.Tensor]:
         channels, mask = self.channels_and_mask(self.indices[position])
-        if self.augment:
-            channels, mask = _augment(channels, mask)
         return channels.contiguous(), mask.contiguous()
 
     def precompute(self) -> None:
@@ -96,26 +89,12 @@ class ContrastDataset(Dataset):
             self.channels_and_mask(self.indices[position])
 
 
-def _augment(channels: torch.Tensor, mask: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-    """Flips and quarter turns, applied identically to channels and mask."""
-    if random.random() < 0.5:
-        channels, mask = channels.flip(-1), mask.flip(-1)
-    if random.random() < 0.5:
-        channels, mask = channels.flip(-2), mask.flip(-2)
-    turns = random.randint(0, 3)
-    if turns:
-        channels = torch.rot90(channels, turns, dims=(-2, -1))
-        mask = torch.rot90(mask, turns, dims=(-2, -1))
-    return channels, mask
-
-
 def build_datasets(
     *,
     root: Path | str = DATASETS_ROOT,
     include: list[str] | None = None,
     params: ChannelParams = DEFAULT_PARAMS,
     test_every: int = 4,
-    augment: bool = True,
     cache_dir: Path | None = CACHE_DIR,
 ) -> tuple[ContrastDataset, ContrastDataset]:
     """Train/test split at video level, so no video contributes to both sides."""
@@ -130,8 +109,8 @@ def build_datasets(
 
     shared = dict(params=params, cache_dir=cache_dir)
     return (
-        ContrastDataset(source, train_index, augment=augment, **shared),
-        ContrastDataset(source, test_index, augment=False, **shared),
+        ContrastDataset(source, train_index, **shared),
+        ContrastDataset(source, test_index, **shared),
     )
 
 
@@ -143,7 +122,6 @@ def build_loaders(
     test_every: int = 4,
     batch_size: int = 4,
     num_workers: int = 0,
-    augment: bool = True,
     cache_dir: Path | None = CACHE_DIR,
     precompute: bool = True,
 ) -> tuple[DataLoader, DataLoader, ContrastDataset, ContrastDataset]:
@@ -152,7 +130,6 @@ def build_loaders(
         include=include,
         params=params,
         test_every=test_every,
-        augment=augment,
         cache_dir=cache_dir,
     )
     if precompute:

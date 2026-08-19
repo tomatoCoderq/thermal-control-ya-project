@@ -1,22 +1,11 @@
-"""U-Net for thermal TSR models (input spatial size 256×256)."""
+"""Classic U-Net used by Thermal-Contrast (spatial size 256×256)."""
 from __future__ import annotations
-
-import sys
-from pathlib import Path
 
 import torch
 import torch.nn as nn
 
-_SEG = Path(__file__).resolve().parents[1]
-if str(_SEG) not in sys.path:
-    sys.path.insert(0, str(_SEG))
-
-from common.metrics import SoftDiceLoss  # noqa: F401
-
 
 class UNetModel(nn.Module):
-    """Classic U-Net; default ``in_channels=6`` matches TSR poly degree 5."""
-
     class _TwoConvLayers(nn.Module):
         def __init__(self, in_channels, out_channels):
             super().__init__()
@@ -54,7 +43,7 @@ class UNetModel(nn.Module):
             u = torch.cat([x, y], dim=1)
             return self.block(u)
 
-    def __init__(self, in_channels: int = 6, num_classes: int = 1):
+    def __init__(self, in_channels: int = 4, num_classes: int = 1):
         super().__init__()
         self.enc_block1 = self._EncoderBlock(in_channels, 64)
         self.enc_block2 = self._EncoderBlock(64, 128)

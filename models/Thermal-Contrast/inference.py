@@ -90,7 +90,7 @@ def evaluate_dataset(
     *,
     threshold: float = 0.5,
 ) -> list[dict[str, float | str]]:
-    """Per-video Dice/IoU over a `ContrastDataset`, without augmentation."""
+    """Per-video Dice/IoU over a `ContrastDataset`."""
     model.eval()
     rows: list[dict[str, float | str]] = []
     for position, index in enumerate(dataset.indices):

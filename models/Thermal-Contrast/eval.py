@@ -54,7 +54,7 @@ def main() -> None:
 
     params = ChannelParams(num_frames=args.num_frames)
     _, test_ds = build_datasets(
-        root=args.root, include=args.include, params=params, test_every=args.test_every, augment=False
+        root=args.root, include=args.include, params=params, test_every=args.test_every
     )
     device = get_device()
     model = load_trained_model(resolve_checkpoint(args.checkpoint), device)

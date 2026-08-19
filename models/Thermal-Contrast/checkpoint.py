@@ -90,3 +90,14 @@ def load_model(path: Path | str, model: nn.Module) -> Checkpoint:
     checkpoint = load_checkpoint(path)
     model.load_state_dict(checkpoint.model_state, strict=True)
     return checkpoint
+
+
+def move_optimizer_state_to_device(
+    optimizer: torch.optim.Optimizer,
+    device: torch.device,
+) -> None:
+    """Move Adam/AdamW momentum buffers to `device` after loading a CPU checkpoint."""
+    for state in optimizer.state.values():
+        for key, value in state.items():
+            if torch.is_tensor(value):
+                state[key] = value.to(device)
