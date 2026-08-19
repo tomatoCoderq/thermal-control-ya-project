@@ -1,7 +1,7 @@
 import random
 import cv2
 import numpy as np
-from datasets import TermoDataset
+from datasets import TermoDataset, TermoOversampledDataset, TermoFrameDataset
 
 ROOT_DIR = "datasets_list"
 
@@ -60,18 +60,30 @@ class Compose:
             data, mask = t(data, mask)
         return data, mask
 
+class RandomChoice:
+    def __init__(self, transforms: list, k: int = 2):
+        self.transforms = transforms
+        self.k = k
 
-transform = Compose([
-    HorizontalFlip(p=0.5),
-    VerticalFlip(p=0.5),
-    Transpose(p=0.5),
-    RandomRotate90(p=0.5),
-])
+    def __call__(self, data, mask):
+        chosen = random.sample(self.transforms, self.k)
+        for t in chosen:
+            data, mask = t(data, mask)
+        return data, mask
 
-ds = TermoDataset(root_dir=ROOT_DIR, include=["dataset_tpu"], transform=transform)
+
+transform = RandomChoice([
+    HorizontalFlip(p=1.0),
+    VerticalFlip(p=1.0),
+    Transpose(p=1.0),
+    RandomRotate90(p=1.0),
+], k=3)
+
+
+ds = TermoOversampledDataset(root_dir=ROOT_DIR, include=["dataset_tpu"], transform=transform, mag_coeff = 2)
 print("Всего сэмплов:", len(ds))
 
-data, mask = ds[0]
+data, mask = ds[25]
 print("data:", data.shape, data.dtype)   # [2000, 256, 256]
 print("mask:", mask.shape, mask.dtype)
 print("mean/std:", data.mean().item(), data.std().item())
