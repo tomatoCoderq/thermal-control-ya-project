@@ -3,6 +3,19 @@ import torch.nn as nn
 from config import CFG
 
 
+'''
+вот эти модели юзаются в экспериментах
+MODEL_ZOO = [
+    "small_cnn",
+    "resnet18",
+    "resnet34",
+    "convnext_nano",
+]
+
+
+'''
+
+
 class SmallCNN(nn.Module):
     """Compact CNN"""
 

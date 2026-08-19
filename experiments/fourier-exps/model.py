@@ -5,6 +5,10 @@ import torch.nn as nn
 from config import CFG
 
 
+'''
+только этот класс юзается в экспах для фурри
+'''
+
 class SmallCNN(nn.Module):
     def __init__(self, in_channels: int, n_classes: int = CFG.classes.n_classes):
         super().__init__()
