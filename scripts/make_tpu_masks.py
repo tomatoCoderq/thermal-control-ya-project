@@ -24,8 +24,12 @@ ROOT = Path(__file__).resolve().parent.parent
 FEATURE_DIR = ROOT / "features_tpu"
 BASE_MASK = ROOT / "datasets" / "dataset_tpu" / "base_mask.png"
 OUT_DIR = ROOT / "datasets" / "dataset_tpu" / "labels" / "table_mask"
+# raw-набор: маски в размере ИСХОДНОГО кадра (без кропа/resize)
+RAW_OUT_DIR = ROOT / "datasets" / "dataset_tpu" / "labels" / "table_mask_raw"
+BASE_MASK_BIN = ROOT / "datasets" / "dataset_tpu" / "base_mask_bin.png"
 
-H, W = 256, 320          # размер kaggle-фич
+H, W = 256, 320          # размер kaggle-фич (feature-набор)
+H_RAW, W_RAW = 240, 320  # размер исходного кадра tpu (imageArray)
 TPU_CROP_TB = 60         # обрезка сверху/снизу, как в main._tpu_crop_resize
 
 # --- глубина залегания h (L), мм, по номеру образца из Таблицы 1 ---------------
@@ -34,6 +38,12 @@ DEPTH_MM: dict[int, float] = {
     9: 0.5, 10: 4.2, 11: 2.1, 12: 4.0, 13: 6.1, 14: 1.9, 15: 2.1,
     16: 2.2, 17: 3.8, 18: 5.9, 19: 1.7, 20: 2.1, 21: 4.2,
 }
+
+# Образцы, снятые в ЗЕРКАЛЬНОЙ (горизонтально отражённой) ориентации: базовый
+# шаблон блоков для них надо отразить по горизонтали (np.fliplr). Ось определена
+# эмпирически по пик-контрастным кадрам .mat (flipud/rot180 не подходят ни одному
+# образцу; не-инвертированные совпадают с base_mask как есть).
+INVERTED_SAMPLES: set[int] = {1, 9, 12, 13, 15, 16, 20, 21}
 
 # сопоставление имени фичи -> номер образца
 #   Calib_Sample_1/2  -> №1/№2 ;  Sample_N -> №N
@@ -67,6 +77,51 @@ def build_box_mask() -> np.ndarray:
     return tpl
 
 
+def build_box_raw() -> np.ndarray:
+    """Шаблон блоков в размере ИСХОДНОГО кадра (240x320) — без кропа/resize.
+
+    base_mask.png нарисована прямо на сыром кадре 240x320, поэтому берём её
+    бинаризацию как есть.
+    """
+    from PIL import Image
+
+    a = np.array(Image.open(BASE_MASK))
+    box = (a[..., 1] > 0) if a.ndim == 3 else (a > 0)
+    if box.shape != (H_RAW, W_RAW):
+        import cv2
+        box = cv2.resize(box.astype(np.uint8), (W_RAW, H_RAW),
+                         interpolation=cv2.INTER_NEAREST).astype(bool)
+    return box
+
+
+def _emit_raw_masks() -> None:
+    """Маски dataset_tpu в размере исходного кадра (240x320) + бинарная base_mask."""
+    from PIL import Image
+
+    RAW_OUT_DIR.mkdir(parents=True, exist_ok=True)
+    box = build_box_raw()
+    # чистая бинарная базовая маска исходного размера (0/255)
+    Image.fromarray((box.astype(np.uint8) * 255), mode="L").save(BASE_MASK_BIN)
+
+    names = sorted(p.stem for p in FEATURE_DIR.glob("*.npy"))
+    for name in names:
+        no = name_to_sample_no(name)
+        if no is None or no not in DEPTH_MM:
+            continue
+        depth = DEPTH_MM[no]
+        gray = int(round(255 * depth / DEPTH_MAX))
+        box_s = np.fliplr(box) if no in INVERTED_SAMPLES else box
+
+        png = np.zeros((H_RAW, W_RAW), dtype=np.uint8)
+        png[box_s] = gray
+        Image.fromarray(png, mode="L").save(RAW_OUT_DIR / f"{name}.png")
+
+        depth_map = np.full((H_RAW, W_RAW), np.nan, dtype=np.float32)
+        depth_map[box_s] = depth
+        np.save(RAW_OUT_DIR / f"{name}.npy", depth_map)
+    print(f"raw-маски ({H_RAW}x{W_RAW}) → {RAW_OUT_DIR}  | base_mask_bin → {BASE_MASK_BIN}")
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     box = build_box_mask()
@@ -84,20 +139,27 @@ def main() -> None:
         depth = DEPTH_MM[no]
         gray = int(round(255 * depth / DEPTH_MAX))
 
+        # инвертированные образцы: зеркалим шаблон блоков по горизонтали
+        box_s = np.fliplr(box) if no in INVERTED_SAMPLES else box
+        inv = no in INVERTED_SAMPLES
+
         png = np.zeros((H, W), dtype=np.uint8)
-        png[box] = gray
+        png[box_s] = gray
         Image.fromarray(png, mode="L").save(OUT_DIR / f"{name}.png")
 
         depth_map = np.full((H, W), np.nan, dtype=np.float32)
-        depth_map[box] = depth
+        depth_map[box_s] = depth
         np.save(OUT_DIR / f"{name}.npy", depth_map)
 
-        rows.append({"name": name, "sample_no": no, "depth_mm": depth, "gray": gray})
+        rows.append({"name": name, "sample_no": no, "depth_mm": depth,
+                     "gray": gray, "inverted": inv})
         previews.append((name, depth, png))
-        print(f"{name:24s} №{no:<2d} depth={depth:>4} мм gray={gray}")
+        print(f"{name:24s} №{no:<2d} depth={depth:>4} мм gray={gray}"
+              f"{'  [inverted → fliplr]' if inv else ''}")
 
     with open(OUT_DIR / "manifest.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=["name", "sample_no", "depth_mm", "gray"])
+        w = csv.DictWriter(f,
+                           fieldnames=["name", "sample_no", "depth_mm", "gray", "inverted"])
         w.writeheader()
         w.writerows(sorted(rows, key=lambda r: r["sample_no"]))
 
@@ -125,6 +187,9 @@ def main() -> None:
         print("preview skipped:", e)
 
     print(f"\nГотово: {len(rows)} масок в {OUT_DIR}")
+
+    # маски в размере исходного кадра (240x320) + бинарная base_mask
+    _emit_raw_masks()
 
 
 if __name__ == "__main__":

@@ -23,3 +23,7 @@ datasets/dataset_defects/
 datasets/dataset_for_segmentation/
 *.zip
 datasets/**/*png
+*.zip
+datasets/dataset_defects
+datasets/dataset_for_segmentation
+datasets/**/*.png
