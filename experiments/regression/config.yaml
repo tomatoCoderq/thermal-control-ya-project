@@ -1,0 +1,54 @@
+# Конфигурация эксперимента: регрессия глубины (вариант B).
+# Сырые данные/маски берутся через TermoDataset из datasets_root.
+
+paths:
+  datasets_root: datasets/datasets_list   # корень для TermoDataset (dataset_kaggle, dataset_tpu)
+  feature_dir: features_p5                 # kaggle TSR-признаки
+  tpu_feature_dir: features_tpu            # tpu TSR-признаки
+  log_dir: runs                            # runs/<timestamp>_<tag>/
+
+classes:
+  gray2cls: {0: 0, 51: 1, 102: 2, 153: 3, 204: 4, 255: 5}   # серый уровень → класс (0=фон)
+  cls_depth: {1: 0.5, 2: 1.0, 3: 1.5, 4: 2.0, 5: 2.5}       # класс → глубина, СМ (kaggle)
+  class_names: ["фон", "0.5", "1.0", "1.5", "2.0", "2.5"]
+
+tpu:
+  depth_max_mm: 6.1                  # gray=255 → эта глубина (нормировка png-масок tpu)
+
+tsr:
+  poly_degree: 5                     # p5: число каналов = poly_degree + 1 = 6
+
+crop:
+  crop: 48                           # размер кропа, пикс.
+  n_bg_per_video: 8                  # (не используется в регрессии — только дефектные кропы)
+
+model:
+  name: small_cnn                    # small_cnn | resnet18 | resnet34 | convnext_nano
+  dropout: 0.3
+  pretrained: false
+
+train:
+  task: regression                   # classification | regression
+  batch_size: 64
+  epochs: 30
+  learning_rate: 0.001
+  n_test_videos: 3                   # сплит по видео (без утечки)
+  max_videos: null                   # null = все записи; число — для отладки
+  loss_name: label_smooth            # (для классификации) ce | weighted_ce | label_smooth
+  seed: 67
+
+optim:
+  name: adam                         # adam | adamw | muon
+  weight_decay: 0.0
+  muon_lr: 0.02
+  adam_lr: 0.0003
+  momentum: 0.95
+  nesterov: true
+  ns_steps: 5
+
+regression:
+  depth_unit: mm
+  loss_name: smooth_l1               # smooth_l1 (Huber) | l1 | mse
+  huber_beta: 1.0
+  target_mean: null
+  target_std: null
