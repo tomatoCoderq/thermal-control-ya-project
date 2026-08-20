@@ -2,6 +2,7 @@ import os
 import numpy as np
 from typing import Optional
 from PIL import Image
+from collections import OrderedDict
 
 from dataclasses import astuple
 from scipy.io import loadmat, whosmat
@@ -270,12 +271,14 @@ class TermoFrameDataset(Dataset):
             include: Optional[list[str]] = None,
             transform: Optional[callable] = None,
             standard_size: tuple[int, int] = (256, 256),
+            cache_size: int = 2,
             ) -> None:
-        
+
         self.transform = transform
         self.standard_size = standard_size
+        self.cache_size = cache_size
         self.items: list[tuple[str, str, DatasetConfig, int]] = []
-        self._data_cache: dict[str, np.ndarray] = {}
+        self._data_cache: OrderedDict[str, np.ndarray] = OrderedDict()
 
         dataset_dirs = sorted(
             os.path.join(root_dir, name) for name in os.listdir(root_dir)
@@ -303,16 +306,25 @@ class TermoFrameDataset(Dataset):
                 shape = next(s for var_name, s, _ in info if var_name == config.data.mat_key)
                 #n_frames = shape[-1]
 
-                for frame_idx in range(200, 1500):
-                    self.items.append((mat_path, mask_path, config, frame_idx))
+                for frame_idx in range(500, 1500):
+                    if (frame_idx - 500) % 20 == 0:
+                        self.items.append((mat_path, mask_path, config, frame_idx))
 
     def __len__(self) -> int:
         return len(self.items)
 
     def _load_full_data(self, mat_path: str, mat_key: str) -> np.ndarray:
-        if mat_path not in self._data_cache:
-            self._data_cache[mat_path] = loadmat(mat_path)[mat_key].astype(np.float32)
-        return self._data_cache[mat_path]
+        if mat_path in self._data_cache:
+            self._data_cache.move_to_end(mat_path)
+            return self._data_cache[mat_path]
+
+        data = loadmat(mat_path)[mat_key].astype(np.float32)
+        self._data_cache[mat_path] = data
+
+        if len(self._data_cache) > self.cache_size:
+            self._data_cache.popitem(last=False)
+
+        return data
 
     def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
         mat_path, mask_path, config, frame_idx = self.items[idx]

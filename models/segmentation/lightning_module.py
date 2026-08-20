@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 
-from metrics import compute_iou, compute_dice
+from .metrics import compute_iou, compute_dice
 
 
 class SegmentationLightningModule(pl.LightningModule):
