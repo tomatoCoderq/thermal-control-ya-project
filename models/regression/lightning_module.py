@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from typing import Any, Callable, Optional
 
 
 class RegressionLightningModule(pl.LightningModule):
@@ -8,17 +9,19 @@ class RegressionLightningModule(pl.LightningModule):
             self,
             model: nn.Module,
             criterion: nn.Module,
-            lr: float = 3e-4,
-            weight_decay: float = 1e-4,
+            optimizer: Callable[[nn.Module], torch.optim.Optimizer] = lambda model: torch.optim.AdamW(
+                model.parameters(), lr=3e-4, weight_decay=1e-4
+            ),
+            scheduler: Optional[Callable[[torch.optim.Optimizer], Any]] = None,
             ):
         super().__init__()
         self.model = model
         self.criterion = criterion
 
-        self.lr = lr
-        self.weight_decay = weight_decay
+        self.optimizer_fn = optimizer
+        self.scheduler_fn = scheduler
 
-        self.save_hyperparameters(ignore=["model", "criterion"])
+        self.save_hyperparameters(ignore=["model", "criterion", "optimizer", "scheduler"])
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
@@ -49,9 +52,11 @@ class RegressionLightningModule(pl.LightningModule):
         x, _ = batch
         return self(x)
 
-    def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=self.trainer.max_epochs, eta_min=self.lr * 0.05
-        )
+    def configure_optimizers(self) -> Any:
+        optimizer = self.optimizer_fn(self.model)
+
+        if self.scheduler_fn is None:
+            return optimizer
+
+        scheduler = self.scheduler_fn(optimizer)
         return {"optimizer": optimizer, "lr_scheduler": scheduler}
