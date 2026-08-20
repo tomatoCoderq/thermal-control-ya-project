@@ -300,9 +300,9 @@ class TermoFrameDataset(Dataset):
 
                 info = whosmat(mat_path)
                 shape = next(s for var_name, s, _ in info if var_name == config.data.mat_key)
-                n_frames = shape[-1]
+                #n_frames = shape[-1]
 
-                for frame_idx in range(n_frames):
+                for frame_idx in range(200, 1500):
                     self.items.append((mat_path, mask_path, config, frame_idx))
 
     def __len__(self) -> int:
