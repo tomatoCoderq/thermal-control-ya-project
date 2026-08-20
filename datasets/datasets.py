@@ -141,6 +141,7 @@ class TermoRegressionDataset(Dataset):
 
         data, mask = self._apply_crop(data, mask, config.crop)
 
+        data = np.transpose(data, (2, 0, 1))     
         if self.transform is not None:
             data, mask = self.transform(data, mask)
 
