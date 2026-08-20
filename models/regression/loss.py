@@ -26,9 +26,9 @@ class CostSensitiveCE(nn.Module):
             self.cw = None
 
     def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        ce = F.cross_entropy(logits, target, weight=self.cw, reduction="none")   # (B,)
-        p = F.softmax(logits, dim=1)                                             # (B,C)
-        exp_cost = (p * self.cost[target]).sum(dim=1)                            # (B,)
+        ce = F.cross_entropy(logits, target, weight=self.cw, reduction="none")
+        p = F.softmax(logits, dim=1)
+        exp_cost = (p * self.cost[target]).sum(dim=1)
         return (ce + self.alpha * exp_cost).mean()
 
 
