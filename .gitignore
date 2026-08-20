@@ -28,3 +28,4 @@ datasets/dataset_defects
 datasets/dataset_for_segmentation
 datasets/**/*.png
 **/*.mp4
+**/*.pkl

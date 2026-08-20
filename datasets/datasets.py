@@ -61,15 +61,12 @@ class TermoDataset(Dataset):
 
         data, mask = self._apply_crop(data, mask, config.crop)
 
+        data = np.transpose(data, (2, 0, 1))              # (H,W,T) -> (T,H,W), под трансформы
         if self.transform is not None:
             data, mask = self.transform(data, mask)
 
-        data = torch.from_numpy(data).float()
-        mask = torch.from_numpy(mask).float()
-        if data.ndim == 3:
-            data = data.permute(2, 0, 1)
-        else:
-            data = data.unsqueeze(0)
+        data = torch.from_numpy(np.ascontiguousarray(data)).float()
+        mask = torch.from_numpy(np.ascontiguousarray(mask)).float()
 
         data = F.interpolate(
             data.unsqueeze(0), size=self.standard_size, mode="bilinear", align_corners=False
@@ -146,15 +143,12 @@ class TermoOversampledDataset(Dataset):
 
         data, mask = self._apply_crop(data, mask, config.crop)
 
+        data = np.transpose(data, (2, 0, 1))              # (H,W,T) -> (T,H,W), под трансформы
         if self.transform is not None and idx // len(self.items) != 0:
             data, mask = self.transform(data, mask)
 
-        data = torch.from_numpy(data).float()
-        mask = torch.from_numpy(mask).float()
-        if data.ndim == 3:
-            data = data.permute(2, 0, 1)
-        else:
-            data = data.unsqueeze(0)
+        data = torch.from_numpy(np.ascontiguousarray(data)).float()
+        mask = torch.from_numpy(np.ascontiguousarray(mask)).float()
 
         data = F.interpolate(
             data.unsqueeze(0), size=self.standard_size, mode="bilinear", align_corners=False
@@ -240,11 +234,12 @@ class TermoFrameDataset(Dataset):
 
         frame, mask = self._apply_crop(frame, mask, config.crop)
 
+        frame = frame[None]                               # (H,W) -> (1,H,W), под трансформы
         if self.transform is not None:
             frame, mask = self.transform(frame, mask)
 
-        frame = torch.from_numpy(frame).float().unsqueeze(0)
-        mask = torch.from_numpy(mask).float()
+        frame = torch.from_numpy(np.ascontiguousarray(frame)).float()   # (1,H,W)
+        mask = torch.from_numpy(np.ascontiguousarray(mask)).float()
         frame = F.interpolate(
             frame.unsqueeze(0), size=self.standard_size, mode="bilinear", align_corners=False
         ).squeeze(0)
