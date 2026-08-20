@@ -51,6 +51,26 @@ class RandomRotate90:
         return data, mask
 
 
+class RandomRoll:
+    def __init__(self, p: float = 0.5, max_shift_ratio: float = 0.5):
+        self.p = p
+        self.max_shift_ratio = max_shift_ratio 
+
+    def __call__(self, data, mask):
+        if random.random() < self.p:
+            h, w = data.shape[0], data.shape[1]
+
+            max_shift_y = int(h * self.max_shift_ratio)
+            max_shift_x = int(w * self.max_shift_ratio)
+            shift_y = random.randint(-max_shift_y, max_shift_y)
+            shift_x = random.randint(-max_shift_x, max_shift_x)
+
+            data = np.roll(data, shift=(shift_y, shift_x), axis=(0, 1))
+            mask = np.roll(mask, shift=(shift_y, shift_x), axis=(0, 1))
+
+        return data, mask
+
+
 class Compose:
     def __init__(self, transforms: list):
         self.transforms = transforms
@@ -70,6 +90,8 @@ class RandomChoice:
         for t in chosen:
             data, mask = t(data, mask)
         return data, mask
+
+
 
 
 transform = RandomChoice([
