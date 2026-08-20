@@ -5,6 +5,11 @@
 поддатасет описывается собственным `manifest.yaml` и содержит `.mat`-файлы
 с данными и файлы масок.
 
+Общая картина (трансформы, U-Net, регрессия глубины, инференс) —
+[docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md). Трансформы, общие для
+обучения и инференса, живут в `datasets/transforms/` и вызываются на
+`(T, H, W)` **до** перевода в тензор.
+
 ## Структура данных на диске
 
 ```
@@ -29,6 +34,7 @@ TermoDataset(
     root_dir: str,
     include: Optional[list[str]] = None,
     transform: Optional[callable] = None,
+    standard_size: tuple[int, int] = (256, 256),
 )
 ```
 
@@ -36,7 +42,8 @@ TermoDataset(
 |-------------|---------------------------|---------------------------------------------------------------------------|
 | `root_dir`  | `str`                     | Путь к папке, содержащей подпапки поддатасетов.                          |
 | `include`   | `list[str] \| None`       | Имена подпапок, которые нужно включить. `None`/пусто — берутся все.       |
-| `transform` | `callable \| None`        | Функция аугментации вида `transform(data, mask) -> (data, mask)`.        |
+| `transform` | `callable \| None`        | `transform(data, mask) -> (data, mask)` на numpy `(T, H, W)`. Обычно `datasets.transforms.Compose`. |
+| `standard_size` | `(H, W)`              | Куда ресайзятся data (bilinear) и mask (nearest) после трансформа.       |
 
 ### Что происходит при инициализации
 
@@ -62,6 +69,15 @@ def __len__(self) -> int:
 ```python
 def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]
 ```
+
+1. `loadmat(mat)[mat_key]` → `(H, W, T)` float32, маска из PNG.
+2. Кроп, если в манифесте заданы все `x0,x1,y0,y1` (тогда ещё срез `:1500` по времени).
+3. `transpose` → `(T, H, W)` — контракт трансформов.
+4. `transform(data, mask)`, если задан.
+5. Тензор, interpolate к `standard_size` (bilinear / nearest).
+6. Глобальный z-score по всему тензору data (одно mean/std, не поканальный).
+
+Возвращает `(data, mask)`: `data` — `(C, H, W)`, `mask` — `(H, W)`.
 
 ## Формат `manifest.yaml`
 
@@ -113,6 +129,29 @@ print(len(ds))
 data, mask = ds[0]
 print(data.shape, mask.shape)   # (C, 256, 256) (256, 256)
 ```
+
+Канальность `C` зависит от `transform`: без него это число кадров `T`;
+с `Stack([MaxMin(), MaxFirst(), Std(), PCA1()])` — 4.
+
+## Другие классы в `datasets.py`
+
+| класс | отличие от `TermoDataset` |
+|---|---|
+| `TermoRegressionDataset` | маска тоже z-score (карта глубины как таргет); трансформ до permute |
+| `TermoOversampledDataset` | `__len__` × `mag_coeff`; трансформ только на копиях с индексом ≥ N |
+| `TermoFrameDataset` | один элемент = один кадр; полный `.mat` кэшируется |
+
+## Трансформы (`datasets/transforms`)
+
+Один интерфейс `t(data, mask=None) -> (data, mask)` на train и infer.
+
+- композиция: `Compose`, `Stack`, `RandomChoice`;
+- видео: `SelectFrames` (вспышка / калибровка / субсэмпл);
+- экстракторы `(T,H,W)→(C,H,W)`: `MaxMin`, `MaxFirst`, `Std`, `PCA1`, `TSR`, `TSRDeriv`;
+- каналы: `PerChannelZNorm`, `PercentileNorm`, `AppendDerivatives`;
+- аугментации: `HorizontalFlip`, `VerticalFlip`, `Transpose`, `RandomRotate90`.
+
+Примеры цепочек — в [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md).
 
 ## Известные ограничения
 

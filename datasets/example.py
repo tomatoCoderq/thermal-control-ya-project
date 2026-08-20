@@ -7,7 +7,6 @@ from transforms import HorizontalFlip, VerticalFlip, Transpose, RandomRotate90, 
 
 ROOT_DIR = "datasets_list"
 
-
 # class HorizontalFlip:
 #     def __init__(self, p: float = 0.5):
 #         self.p = p
@@ -72,8 +71,6 @@ ROOT_DIR = "datasets_list"
 #         for t in chosen:
 #             data, mask = t(data, mask)
 #         return data, mask
-
-
 
 
 transform = RandomChoice([

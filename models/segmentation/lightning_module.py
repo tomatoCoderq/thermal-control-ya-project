@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 
-from metrics import compute_iou, compute_dice
+from .metrics import compute_iou, compute_dice
 
 
 class SegmentationLightningModule(pl.LightningModule):
@@ -28,6 +28,9 @@ class SegmentationLightningModule(pl.LightningModule):
 
     def _shared_step(self, batch: tuple[torch.Tensor, torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         data, mask = batch
+        mask = (mask > 0).float()
+        if mask.ndim == 3:
+            mask = mask.unsqueeze(1)
         logits = self(data)
         loss = self.criterion(logits, mask)
         iou = compute_iou(logits, mask)
@@ -36,17 +39,21 @@ class SegmentationLightningModule(pl.LightningModule):
         return loss, iou, dice
 
     def training_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        data, _ = batch
         loss, iou, dice = self._shared_step(batch)
-        self.log("train_loss", loss, prog_bar=True, on_epoch=True)
-        self.log("train_iou", iou, on_epoch=True)
-        self.log("train_dice", dice, on_epoch=True)
+        log = dict(on_step=False, on_epoch=True, batch_size=data.size(0))
+        self.log("train_loss", loss, prog_bar=True, **log)
+        self.log("train_iou", iou, **log)
+        self.log("train_dice", dice, **log)
         return loss
 
     def validation_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> torch.Tensor:
+        data, _ = batch
         loss, iou, dice = self._shared_step(batch)
-        self.log("val_loss", loss, prog_bar=True, on_epoch=True)
-        self.log("val_iou", iou, prog_bar=True, on_epoch=True)
-        self.log("val_dice", dice, prog_bar=True, on_epoch=True)
+        log = dict(on_step=False, on_epoch=True, batch_size=data.size(0), prog_bar=True)
+        self.log("val_loss", loss, **log)
+        self.log("val_iou", iou, **log)
+        self.log("val_dice", dice, **log)
         return loss
 
     def predict_step(self, batch: tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> torch.Tensor:
