@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from model import patchify
+from .model import patchify
 
 
 class MAEReconstructionLoss(nn.Module):

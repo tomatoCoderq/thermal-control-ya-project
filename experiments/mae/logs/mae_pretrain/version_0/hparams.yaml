@@ -1,0 +1,12 @@
+decoder_depth: 1
+decoder_dim: 64
+decoder_heads: 2
+depth: 2
+embed_dim: 128
+img_size: 256
+in_channels: 1
+lr: 0.00015
+mask_ratio: 0.4
+num_heads: 4
+patch_size: 16
+weight_decay: 0.05
