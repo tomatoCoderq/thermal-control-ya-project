@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from typing import Optional
-from config import DatasetConfig
 from PIL import Image
 
 from dataclasses import astuple
@@ -10,6 +9,8 @@ from scipy.io import loadmat, whosmat
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
+
+from .config import DatasetConfig
 
 class TermoDataset(Dataset):
     def __init__(

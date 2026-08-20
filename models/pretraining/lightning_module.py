@@ -1,9 +1,9 @@
 import torch
 import pytorch_lightning as pl
 
-from model import MAE, patchify
-from loss import MAEReconstructionLoss
-from metrics import compute_psnr, compute_visible_mse
+from .model import MAE, patchify
+from .loss import MAEReconstructionLoss
+from .metrics import compute_psnr, compute_visible_mse
 
 
 class MAELightningModule(pl.LightningModule):
